@@ -1,0 +1,21 @@
+1) In build.gradle file at the project root:
+    repositories {
+        mavenCentral()
+    }
+2) In build.common.gradle:
+  defaultConfig {
+    applicationId 'com.qualcomm.ftcrobotcontroller'
+    minSdkVersion 24
+    targetSdkVersion 28
+    multiDexEnabled true
+  }
+3) Also in build.common.gradle:
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+4) In build.gradle (:TeamCode)
+  dependencies {
+    implementation 'org.ftclib.ftclib:vision:2.0.1' // vision
+    implementation 'org.ftclib.ftclib:core:2.0.1' // core
+  }
