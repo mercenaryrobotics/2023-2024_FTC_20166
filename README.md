@@ -1,7 +1,4 @@
 ## NOTICE
-THIS REPOSITORY IS BASED ON THE ORIGINAL FTC CENTERSTAGE SDK RELEASE. IT WILL BE?HAS BEEN
-MODIFIED ON AN ONGOING BASIS TO REFLECT FTC TEAM 20166's CODE DEVELOPMENT THROUGHOUT THE
-2023-2024 FTC SEASON
 
 This repository contains the public FTC SDK for the CENTERSTAGE (2023-2024) competition season.
 
@@ -61,6 +58,19 @@ Samples Folder: &nbsp;&nbsp; [/FtcRobotController/src/main/java/org/firstinspire
 The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc/teamcode](TeamCode/src/main/java/org/firstinspires/ftc/teamcode) folder contains an explanation of the sample naming convention, and instructions on how to copy them to your own project space.
 
 # Release Information
+
+## Version 9.0.1 (20230929-083754)
+
+### Enhancements
+* Updates AprilTag samples to include Decimation and additional Comments.  Also corrects misleading tag ID warnings
+* Increases maximum size of Blocks inline comments to 140 characters
+* Adds Blocks sample BasicOmniOpMode.
+* Updated CENTERSTAGE library AprilTag orientation quaternions
+    * Thanks [@FromenActual](https://github.com/FromenActual)
+* Updated Java Sample ConceptTensorFlowObjectDetection.java to include missing elements needed for custom model support.
+
+### Bug Fixes
+* Fixes a problem where after October 1 the Driver Station will report as obsolete on v9.0 and prompt the user to update.
 
 ## Version 9.0 (20230830-154348)
 
@@ -1430,4 +1440,3 @@ Changes include:
  * The API for the Legacy Module and Core Device Interface Module have been updated.
    - Support for encoders with the Legacy Module is now working.
  * The hardware loop has been updated for better performance.
-"# 2023-2024_FTC_20166" 
