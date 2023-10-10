@@ -11,8 +11,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.ejml.data.FMatrixRBlock;
 
-@TeleOp (name = "MecanumDrivingSample" ,group = "Linear Opmode")
-//@Disabled
+@TeleOp
+@Disabled
 public class MecanumDrivingSample extends LinearOpMode {
 
     // This variable determines whether the following program

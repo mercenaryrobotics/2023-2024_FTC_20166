@@ -3,18 +3,17 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-@TeleOp (name = "Motor_Test" ,group = "Linear Opmode")
+@TeleOp
 
 @Disabled
-public class Motor_Test extends LinearOpMode {
+public class MainTeleop extends LinearOpMode {
     //Dashboard demo variables
     public static double ORBITAL_FREQUENCY = 0.05;
     public static double SPIN_FREQUENCY = 0.25;
@@ -28,7 +27,7 @@ public class Motor_Test extends LinearOpMode {
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
 
-    public void initializeMotors()
+    public void initializeDriveMotors()
     {
         frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftDrive");
         frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightDrive");
@@ -94,7 +93,7 @@ public class Motor_Test extends LinearOpMode {
 
     public void runOpMode()  {
         initializeDashboard();
-        initializeMotors();
+        initializeDriveMotors();
 
         waitForStart();
         while (opModeIsActive()) {
