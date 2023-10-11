@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemLift;
 
 @TeleOp
 
@@ -20,10 +21,12 @@ public class CenterstageMain extends LinearOpMode {
     private START_POSITION startPosition = START_POSITION.LEFT;
 
     private SubSystemDrivetrain drivetrain=null;
+    private SubSystemLift lift = null;
 
     private double joystickTranslateX = 0.0;
     private double joystickTranslateY = 0.0;
     private double joystickRotate = 0.0;
+    private double liftControl = 0.0;
 
     private double joystick1LeftXOffset = 0.0;
     private double joystick1LeftYOffset = 0.0;
@@ -36,6 +39,7 @@ public class CenterstageMain extends LinearOpMode {
 
     public void initHardware() throws InterruptedException {
         drivetrain = new SubSystemDrivetrain(hardwareMap);
+        lift = new SubSystemLift(hardwareMap);
         gamepadsReset();
     }
 
@@ -61,6 +65,7 @@ public class CenterstageMain extends LinearOpMode {
     private void disableHardware() {
 
         drivetrain.disableDrivetrainMotors();
+        lift.setLift(0);
     }
 
     private void gamepadsReset()
@@ -80,6 +85,7 @@ public class CenterstageMain extends LinearOpMode {
         joystickTranslateX = gamepad1.left_stick_x - joystick1LeftXOffset;
         joystickTranslateY = gamepad1.left_stick_y - joystick1LeftYOffset;
         joystickRotate     = gamepad1.right_stick_x - joystick1RightXOffset;
+        liftControl        = gamepad1.left_trigger - gamepad1.right_trigger;
     }
     private void drivebaseUpdate()
     {
@@ -90,6 +96,26 @@ public class CenterstageMain extends LinearOpMode {
         drivetrain.doMecanumDrive(translateSpeed, heading, joystickRotate, TRUE);
     }
 
+    private void telemetryUpdate()
+    {
+        telemetry.addData("Lift position", lift.getLiftEncoders());
+        telemetry.addData("Lift control", liftControl);
+        telemetry.update();
+    }
+
+    private void liftUpdate()
+    {
+        lift.setLift(liftControl);
+        if (gamepad1.left_bumper)
+        {
+            lift.setLiftPosition(lift.liftMaxHeight);
+        }
+        else if (gamepad1.right_bumper)
+        {
+            lift.setLiftPosition(0);
+        }
+    }
+
     private void doTeleop()
     {
         while(opModeIsActive())
@@ -98,6 +124,8 @@ public class CenterstageMain extends LinearOpMode {
             gamepadsUpdate();
             //Process the joysticks for drivebase motion
             drivebaseUpdate();
+            liftUpdate();
+            telemetryUpdate();
         }
     }
 
