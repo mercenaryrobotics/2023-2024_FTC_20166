@@ -20,6 +20,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import java.lang.Math;
 
 public class SubSystemDrivetrain {
+    //Which robot are we on? Hubs are mounted different on A & B
+    private int currentBot = 0;//0 = Robot A, 1 = Robot B
     // Instantiate the drivetrain motor variables
     private DcMotorEx frontLeftDrive;
     private DcMotorEx frontRightDrive;
@@ -52,11 +54,20 @@ public class SubSystemDrivetrain {
         //IMU
         imu = hardwareMap.get(IMU.class, "imu");
 
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                                                             RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
-                                                             RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
-                                                             )
-                                                      );
+        if (currentBot == 0) {
+            IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                    RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
+                    RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+            )
+            );
+        }
+        else {
+            IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                    RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                    RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+            )
+            );
+        }
     }
 
     private void resetEncoders(){
