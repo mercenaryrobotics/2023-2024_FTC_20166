@@ -6,13 +6,16 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import static java.lang.Thread.sleep;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 //import org.opencv.core.Mat;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import java.lang.Math;
 
@@ -22,7 +25,7 @@ public class SubSystemDrivetrain {
     private DcMotorEx frontRightDrive;
     private DcMotorEx backLeftDrive;
     private DcMotorEx backRightDrive;
-    private BNO055IMU imu;
+    private IMU imu;
     private double ZeroAngleOffset  = 0.0;
     private double speedDeadband = 0.05;
 
@@ -47,17 +50,13 @@ public class SubSystemDrivetrain {
         resetEncoders();
 
         //IMU
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.mode = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled = false;
-        imu.initialize(parameters);
-        // make sure the imu gyro is calibrated before continuing.
-        while (!imu.isGyroCalibrated()) {
-            sleep(50);
-        }
+        imu = hardwareMap.get(IMU.class, "imu");
+
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                                                             RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
+                                                             RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                                                             )
+                                                      );
     }
 
     private void resetEncoders(){
@@ -85,8 +84,8 @@ public class SubSystemDrivetrain {
     }
 
     public double getCurrentHeading(){
-        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
-        return loopInRange(angles.firstAngle - ZeroAngleOffset, Math.PI);
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        return loopInRange(orientation.getYaw(AngleUnit.RADIANS) - ZeroAngleOffset, Math.PI);
     }
 
     public double loopInRange(double value, double range)
