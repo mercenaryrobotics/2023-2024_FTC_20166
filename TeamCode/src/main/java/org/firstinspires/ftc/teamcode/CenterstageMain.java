@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -8,7 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
-import org.firstinspires.ftc.teamcode.subsystems.SubSystemLift;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
 @TeleOp
 
@@ -21,12 +21,16 @@ public class CenterstageMain extends LinearOpMode {
     private START_POSITION startPosition = START_POSITION.LEFT;
 
     private SubSystemDrivetrain drivetrain=null;
-    private SubSystemLift lift = null;
+    private SubSystemIntakeLift intakeLift = null;
+    private SubSystemHangLift hangLift = null;
 
     private double joystickTranslateX = 0.0;
     private double joystickTranslateY = 0.0;
     private double joystickRotate = 0.0;
-    private double liftControl = 0.0;
+    private boolean intakeLiftGoTop = false;
+    private boolean intakeLiftGoMId = false;
+    private boolean intakeLiftGoBottom = false;
+    private double hangLiftControl = 0.0;
 
     private double joystick1LeftXOffset = 0.0;
     private double joystick1LeftYOffset = 0.0;
@@ -39,7 +43,9 @@ public class CenterstageMain extends LinearOpMode {
 
     public void initHardware() throws InterruptedException {
         drivetrain = new SubSystemDrivetrain(hardwareMap);
-        lift = new SubSystemLift(hardwareMap);
+        intakeLift = new SubSystemIntakeLift(hardwareMap);
+        hangLift   = new SubSystemHangLift(hardwareMap);
+
         gamepadsReset();
     }
 
@@ -50,10 +56,15 @@ public class CenterstageMain extends LinearOpMode {
         while (!(isStarted() || isStopRequested())) {
             if (gamepad1.a){alianceColor = ALLIANCE_COLOR.RED;}
             if (gamepad1.b){alianceColor = ALLIANCE_COLOR.BLUE;}
+
             if (gamepad1.left_bumper) {startPosition = START_POSITION.LEFT;}
             if (gamepad1.right_bumper) {startPosition = START_POSITION.RIGHT;}
+
             telemetry.addData("Alliance Color", alianceColor);
             telemetry.addData("Start position", startPosition);
+
+            telemetry.addData("Iniyann is the greatest programmer in the world.", alianceColor);
+
             telemetry.update();
             idle();
         }
@@ -65,7 +76,8 @@ public class CenterstageMain extends LinearOpMode {
     private void disableHardware() {
 
         drivetrain.disableDrivetrainMotors();
-        lift.setLift(0);
+        intakeLift.setLift(0);
+        hangLift.setLift(0);
     }
 
     private void gamepadsReset()
@@ -73,20 +85,30 @@ public class CenterstageMain extends LinearOpMode {
         //Measure 'at rest' joystick positions
         joystick1LeftXOffset = gamepad1.left_stick_x;
         joystick1RightXOffset = gamepad1.right_stick_x;
+
         joystick1LeftYOffset = gamepad1.left_stick_y;
         joystick1RightYOffset = gamepad1.right_stick_y;
+
+
         joystick2LeftXOffset = gamepad2.left_stick_x;
         joystick2RightXOffset = gamepad2.right_stick_x;
+
         joystick2LeftYOffset = gamepad2.left_stick_y;
         joystick2RightYOffset = gamepad2.right_stick_y;
     }
     private void gamepadsUpdate()
     {
+        //Drive base motion controls
         joystickTranslateX = gamepad1.left_stick_x - joystick1LeftXOffset;
         joystickTranslateY = gamepad1.left_stick_y - joystick1LeftYOffset;
         joystickRotate     = gamepad1.right_stick_x - joystick1RightXOffset;
-        liftControl        = gamepad1.left_trigger - gamepad1.right_trigger;
-    }
+        //intake lift controls
+        intakeLiftGoTop = gamepad1.dpad_up;
+        intakeLiftGoMId = gamepad1.dpad_left;
+        intakeLiftGoBottom = gamepad1.dpad_down;
+
+        hangLiftControl  = gamepad1.left_trigger - gamepad1.right_trigger;
+     }
     private void drivebaseUpdate()
     {
         double translateSpeed = Math.hypot(joystickTranslateX, joystickTranslateY);
@@ -98,22 +120,24 @@ public class CenterstageMain extends LinearOpMode {
 
     private void telemetryUpdate()
     {
-        telemetry.addData("Lift position", lift.getLiftEncoders());
-        telemetry.addData("Lift control", liftControl);
         telemetry.update();
     }
 
-    private void liftUpdate()
+    private void intakeLiftUpdate()
     {
-        lift.setLift(liftControl);
-        if (gamepad1.left_bumper)
+        if (intakeLiftGoTop)
         {
-            lift.setLiftPosition(lift.liftMaxHeight);
+            intakeLift.setLiftPosition(intakeLift.liftMaxHeight);
         }
-        else if (gamepad1.right_bumper)
+        else if (intakeLiftGoBottom)
         {
-            lift.setLiftPosition(0);
+            intakeLift.setLiftPosition(0);
         }
+    }
+
+    private void hangLiftUpdate()
+    {
+        hangLift.setLift(hangLiftControl);
     }
 
     private void doTeleop()
@@ -124,7 +148,11 @@ public class CenterstageMain extends LinearOpMode {
             gamepadsUpdate();
             //Process the joysticks for drivebase motion
             drivebaseUpdate();
-            liftUpdate();
+            //Update the intake lift
+            intakeLiftUpdate();
+            //Update the hang lift
+            hangLiftUpdate();
+            //Update telemetry
             telemetryUpdate();
         }
     }

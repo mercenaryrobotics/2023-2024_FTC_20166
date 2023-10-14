@@ -4,15 +4,18 @@ import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.hardware.RevIMU;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.ejml.data.FMatrixRBlock;
 
 @TeleOp
-@Disabled
+//@Disabled
+
 public class MecanumDrivingSample extends LinearOpMode {
 
     // This variable determines whether the following program
@@ -20,6 +23,7 @@ public class MecanumDrivingSample extends LinearOpMode {
     // differences between them can be read here in the docs:
     // https://docs.ftclib.org/ftclib/features/drivebases#control-scheme
     static boolean FIELD_CENTRIC = true;//NOTE : FIELD CENTRIC WILL ONLY WORK IF THE CONTROL HUB IS FLAT ON THE ROBOT AT THE MOMENT!!!
+    private DcMotorEx climbLift;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -29,6 +33,8 @@ public class MecanumDrivingSample extends LinearOpMode {
         Motor FR = new Motor(hardwareMap, "frontRightDrive", Motor.GoBILDA.RPM_312);
         Motor BL = new Motor(hardwareMap, "backLeftDrive", Motor.GoBILDA.RPM_312);
         Motor BR = new Motor(hardwareMap, "backRightDrive", Motor.GoBILDA.RPM_312);
+
+        climbLift = hardwareMap.get(DcMotorEx.class, "hangLifter");
 
         FL.setInverted(true);
         FR.setInverted(true);
@@ -63,12 +69,15 @@ public class MecanumDrivingSample extends LinearOpMode {
         RevIMU imu = new RevIMU(hardwareMap);
         imu.init();
 
+
         // the extended gamepad object
         GamepadEx driverOp = new GamepadEx(gamepad1);
 
         waitForStart();
 
         while (!isStopRequested()) {
+
+            int i = 0; //Used for the modulus to switch to field/robot centric
 
             // Driving the mecanum base takes 3 joystick parameters: leftX, leftY, rightX.
             // These are related to the left stick x value, left stick y value, and
@@ -129,7 +138,7 @@ public class MecanumDrivingSample extends LinearOpMode {
                         false
                 );
             }
-            int i = 0;
+
 
 
             if(gamepad1.a) {
@@ -140,6 +149,9 @@ public class MecanumDrivingSample extends LinearOpMode {
                     FIELD_CENTRIC = false;
                 }
             }
+
+            climbLift.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+
 
         }
     }
