@@ -21,7 +21,7 @@ import java.lang.Math;
 
 public class SubSystemDrivetrain {
     //Which robot are we on? Hubs are mounted different on A & B
-    private int currentBot = 0;//0 = Robot A, 1 = Robot B
+    private int currentBot = 1;//0 = Robot A, 1 = Robot B
     // Instantiate the drivetrain motor variables
     private DcMotorEx frontLeftDrive;
     private DcMotorEx frontRightDrive;
@@ -81,6 +81,10 @@ public class SubSystemDrivetrain {
         frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+    }
+
+    public void resetGyro(){
+        imu.resetYaw();
     }
 
     private int[] getMotorEncoders(){

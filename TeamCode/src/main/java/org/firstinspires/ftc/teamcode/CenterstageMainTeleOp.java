@@ -10,15 +10,21 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
+import java.lang.reflect.Field;
+
 @TeleOp
 
 //@Disabled
-public class CenterstageMain extends LinearOpMode {
+public class CenterstageMainTeleOp extends LinearOpMode {
     private ElapsedTime runtime     = new ElapsedTime();
     private enum ALLIANCE_COLOR {RED, BLUE}
     private enum START_POSITION {LEFT, RIGHT}
     private ALLIANCE_COLOR alianceColor = ALLIANCE_COLOR.RED;
     private START_POSITION startPosition = START_POSITION.LEFT;
+
+    private boolean FieldCentric = true;
+    private boolean lastButtonState = false;
+    private boolean driveModeChangeButton = false;
 
     private SubSystemDrivetrain drivetrain=null;
     private SubSystemIntakeLift intakeLift = null;
@@ -43,12 +49,12 @@ public class CenterstageMain extends LinearOpMode {
 
     public void initHardware() throws InterruptedException {
         drivetrain = new SubSystemDrivetrain(hardwareMap);
+        drivetrain.resetGyro();
         intakeLift = new SubSystemIntakeLift(hardwareMap);
         hangLift   = new SubSystemHangLift(hardwareMap);
 
         gamepadsReset();
     }
-
     private void waitStart(){
         // Wait for the game to start (driver presses PLAY)
         //Use this time to run the vision code to detect team token position
@@ -63,10 +69,12 @@ public class CenterstageMain extends LinearOpMode {
             telemetry.addData("Alliance Color", alianceColor);
             telemetry.addData("Start position", startPosition);
 
-            telemetry.addData("Iniyann is the greatest programmer in the world.", alianceColor);
+            telemetry.addData("Iniyann is the greatest programmer ", "and the best driver in the world");
 
             telemetry.update();
             idle();
+
+
         }
     }
 
@@ -108,6 +116,8 @@ public class CenterstageMain extends LinearOpMode {
         intakeLiftGoBottom = gamepad1.dpad_down;
 
         hangLiftControl  = gamepad1.left_trigger - gamepad1.right_trigger;
+
+        driveModeChangeButton = gamepad1.y;
      }
     private void drivebaseUpdate()
     {
@@ -115,7 +125,7 @@ public class CenterstageMain extends LinearOpMode {
         //Heading 0 = forward, -ve right, +ve left
         double heading = Math.atan2(-joystickTranslateX, -joystickTranslateY);
 
-        drivetrain.doMecanumDrive(translateSpeed, heading, joystickRotate, TRUE);
+        drivetrain.doMecanumDrive(translateSpeed, heading, joystickRotate, FieldCentric);
     }
 
     private void telemetryUpdate()
@@ -154,6 +164,13 @@ public class CenterstageMain extends LinearOpMode {
             hangLiftUpdate();
             //Update telemetry
             telemetryUpdate();
+
+            if(driveModeChangeButton && !lastButtonState) {
+                FieldCentric = !FieldCentric;
+                telemetry.addData("Field Centric = ", FieldCentric);
+            }
+
+            lastButtonState = driveModeChangeButton;
         }
     }
 
