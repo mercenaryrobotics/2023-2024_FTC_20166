@@ -36,6 +36,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private boolean intakeLiftGoTop = false;
     private boolean intakeLiftGoMId = false;
     private boolean intakeLiftGoBottom = false;
+
+    private boolean hangRelease = false;
     private double hangLiftControl = 0.0;
 
     private double joystick1LeftXOffset = 0.0;
@@ -69,7 +71,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             telemetry.addData("Alliance Color", alianceColor);
             telemetry.addData("Start position", startPosition);
 
-            telemetry.addData("Iniyann is the greatest programmer ", "and the best driver in the world");
+            telemetry.addData("Iniyann is the greatest programmer ", "and the best driver alive");
 
             telemetry.update();
             idle();
@@ -111,11 +113,13 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         joystickTranslateY = gamepad1.left_stick_y - joystick1LeftYOffset;
         joystickRotate     = gamepad1.right_stick_x - joystick1RightXOffset;
         //intake lift controls
-        intakeLiftGoTop = gamepad1.dpad_up;
-        intakeLiftGoMId = gamepad1.dpad_left;
-        intakeLiftGoBottom = gamepad1.dpad_down;
+        intakeLiftGoTop = gamepad2.dpad_up;
+        intakeLiftGoMId = gamepad2.dpad_left;
+        intakeLiftGoBottom = gamepad2.dpad_down;
+        //Servo controls
+        hangRelease = gamepad2.dpad_right;
 
-        hangLiftControl  = gamepad1.left_trigger - gamepad1.right_trigger;
+        hangLiftControl  = gamepad2.left_trigger - gamepad2.right_trigger;
 
         driveModeChangeButton = gamepad1.y;
      }
@@ -130,6 +134,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
     private void telemetryUpdate()
     {
+        telemetry.addData("Hang State = ", hangRelease);
         telemetry.update();
     }
 
@@ -148,6 +153,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private void hangLiftUpdate()
     {
         hangLift.setLift(hangLiftControl);
+
+        hangLift.SubSystemHangState(hangRelease);
     }
 
     private void doTeleop()
