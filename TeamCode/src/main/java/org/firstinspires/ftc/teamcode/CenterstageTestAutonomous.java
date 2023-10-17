@@ -143,7 +143,7 @@ public class CenterstageTestAutonomous extends LinearOpMode {
         // Initialize the drive system variables.
         frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeftDrive");
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
-        backRightDrive = hardwareMap.get(DcMotor.class, "backLeftDrive");
+        backLeftDrive = hardwareMap.get(DcMotor.class, "backLeftDrive");
         backRightDrive = hardwareMap.get(DcMotor.class, "backRightDrive");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
