@@ -31,14 +31,15 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 /*
@@ -91,14 +92,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous
 //@Disabled
-public class CenterstageTestAutonomous extends LinearOpMode {
+public class CenterstageAutonomousMain extends LinearOpMode {
 
     /* Declare OpMode members. */
     private DcMotor frontLeftDrive = null;
     private DcMotor frontRightDrive = null;
-
     private DcMotor backRightDrive = null;
     private DcMotor backLeftDrive = null;
+    private DistanceSensor distanceSensor;
 
     private IMU             imu         = null;      // Control/Expansion Hub IMU
 
@@ -120,10 +121,12 @@ public class CenterstageTestAutonomous extends LinearOpMode {
     // For example, use a value of 2.0 for a 12-tooth spur gear driving a 24-tooth spur gear.
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
+
+    static final double     CORRECTION_FACTOR       = (60.0/58.0);
     static final double     COUNTS_PER_MOTOR_REV    = 537.7 ;   // eg: GoBILDA 312 RPM Yellow Jacket
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
-    static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
+    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
 
     // These constants define the desired driving/control characteristics
@@ -138,6 +141,15 @@ public class CenterstageTestAutonomous extends LinearOpMode {
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
     static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable
     static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable
+    private int propPosition;
+
+    private final double distanceDropPos1 = 29.0;
+    private final double finishDistancePos1 = 2.0;
+    private final double distanceDropPos2 = 29.0;
+    private final double distanceDropPos3 = 29.0;
+    private final double finishDistancePos3 = 3.0;
+    private int propStartingPos = 0;
+
 
     public void initializeMotors() {
         // Initialize the drive system variables.
@@ -145,6 +157,8 @@ public class CenterstageTestAutonomous extends LinearOpMode {
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
         backLeftDrive = hardwareMap.get(DcMotor.class, "backLeftDrive");
         backRightDrive = hardwareMap.get(DcMotor.class, "backRightDrive");
+
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
@@ -155,6 +169,50 @@ public class CenterstageTestAutonomous extends LinearOpMode {
         backRightDrive.setDirection(DcMotor.Direction.FORWARD);
     }
 
+    public void testProgram() {
+        // Step through each leg of the path,
+        // Notes:   Reverse movement is obtained by setting a negative distance (not speed)
+        //          holdHeading() is used after turns to let the heading stabilize
+        //          Add a sleep(2000) after any step to keep the telemetry data visible for review
+
+
+        driveStraight(DRIVE_SPEED, 60.0, 0.0);    // Drive Forward 24"
+        turnToHeading( TURN_SPEED, -45.0);               // Turn  CW to -45 Degrees
+        holdHeading( TURN_SPEED, -45.0, 0.5);   // Hold -45 Deg heading for a 1/2 second
+
+        driveStraight(DRIVE_SPEED, 17.0, -45.0);  // Drive Forward 17" at -45 degrees (12"x and 12"y)
+        turnToHeading( TURN_SPEED,  45.0);               // Turn  CCW  to  45 Degrees
+        holdHeading( TURN_SPEED,  45.0, 0.5);    // Hold  45 Deg heading for a 1/2 second
+
+        driveStraight(DRIVE_SPEED, 17.0, 45.0);  // Drive Forward 17" at 45 degrees (-12"x and 12"y)
+        turnToHeading( TURN_SPEED,   0.0);               // Turn  CW  to 0 Degrees
+        holdHeading( TURN_SPEED,   0.0, 1.0);    // Hold  0 Deg heading for 1 second
+
+        driveStraight(DRIVE_SPEED,-48.0, 0.0);    // Drive in Reverse 48" (should return to approx. staring position)
+
+        telemetry.addData("Path", "Complete");
+        telemetry.update();
+        sleep(1000);  // Pause to display last telemetry message.
+    }
+
+    public void configureMotors() {
+        // Ensure the robot is stationary.  Reset the encoders and set the motors to BRAKE mode
+        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        // Set the encoders for closed loop speed control, and reset the heading.
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
     @Override
     public void runOpMode() {
         initializeMotors();
@@ -173,53 +231,57 @@ public class CenterstageTestAutonomous extends LinearOpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        // Ensure the robot is stationary.  Reset the encoders and set the motors to BRAKE mode
-        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
+        configureMotors();
+        imu.resetYaw();
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
             telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
+            telemetry.addData("Distance Sensor: ", distanceSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("propStartingPos: ", propStartingPos);
             telemetry.update();
+            propPosition = detectProp();
         }
 
-        // Set the encoders for closed loop speed control, and reset the heading.
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         imu.resetYaw();
-
-        // Step through each leg of the path,
-        // Notes:   Reverse movement is obtained by setting a negative distance (not speed)
-        //          holdHeading() is used after turns to let the heading stabilize
-        //          Add a sleep(2000) after any step to keep the telemetry data visible for review
+        dropPurplePixel(propPosition);
 
 
-        driveStraight(DRIVE_SPEED, 24.0, 0.0);    // Drive Forward 24"
-        turnToHeading( TURN_SPEED, -45.0);               // Turn  CW to -45 Degrees
-        holdHeading( TURN_SPEED, -45.0, 0.5);   // Hold -45 Deg heading for a 1/2 second
 
-        driveStraight(DRIVE_SPEED, 17.0, -45.0);  // Drive Forward 17" at -45 degrees (12"x and 12"y)
-        turnToHeading( TURN_SPEED,  45.0);               // Turn  CCW  to  45 Degrees
-        holdHeading( TURN_SPEED,  45.0, 0.5);    // Hold  45 Deg heading for a 1/2 second
+    }
 
-        driveStraight(DRIVE_SPEED, 17.0, 45.0);  // Drive Forward 17" at 45 degrees (-12"x and 12"y)
-        turnToHeading( TURN_SPEED,   0.0);               // Turn  CW  to 0 Degrees
-        holdHeading( TURN_SPEED,   0.0, 1.0);    // Hold  0 Deg heading for 1 second
+    private int detectProp() {
 
-        driveStraight(DRIVE_SPEED,-48.0, 0.0);    // Drive in Reverse 48" (should return to approx. staring position)
+        if(gamepad1.dpad_left) {
+            propStartingPos = 1;
+        } else if (gamepad1.dpad_up) {
+            propStartingPos = 2;
+        } else if (gamepad1.dpad_right) {
+            propStartingPos = 3;
+        }
 
-        telemetry.addData("Path", "Complete");
-        telemetry.update();
-        sleep(1000);  // Pause to display last telemetry message.
+        return propStartingPos;
+
+
+    }
+
+    private void dropPurplePixel(int position) {
+
+        if(position == 1) {
+            driveStraight(DRIVE_SPEED, distanceDropPos1, 0);
+            turnToHeading(TURN_SPEED, 90);
+            holdHeading(TURN_SPEED,  90, 0.5);
+            driveStraight(DRIVE_SPEED, finishDistancePos1, 90);
+
+        } else if (position == 2) {
+            driveStraight(DRIVE_SPEED, distanceDropPos2, 0);
+
+        }  else /*if (position == 3)*/ {
+            driveStraight(DRIVE_SPEED, distanceDropPos3, 0);
+            turnToHeading(TURN_SPEED, -90);
+            holdHeading( TURN_SPEED,  -90, 0.5);
+            driveStraight(DRIVE_SPEED, finishDistancePos3, -90);
+        }
+
     }
 
     /*

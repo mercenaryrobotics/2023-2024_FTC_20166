@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 @Autonomous
 @Disabled
-public class CenterstageMainAutonomous extends LinearOpMode {
+public class OLD_CenterstageMainAutonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
