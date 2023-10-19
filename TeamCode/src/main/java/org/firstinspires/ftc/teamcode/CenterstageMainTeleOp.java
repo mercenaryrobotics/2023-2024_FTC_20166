@@ -17,6 +17,11 @@ import java.lang.reflect.Field;
 //@Disabled
 public class CenterstageMainTeleOp extends LinearOpMode {
     private ElapsedTime runtime     = new ElapsedTime();
+    private boolean hangLiftHang = false;
+    private boolean hangLiftDrop = true;
+    private int intakeLiftPosition = 1;
+    private boolean clawOpen = false;
+
     private enum ALLIANCE_COLOR {RED, BLUE}
     private enum START_POSITION {LEFT, RIGHT}
     private ALLIANCE_COLOR alianceColor = ALLIANCE_COLOR.RED;
@@ -62,8 +67,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         //Use this time to run the vision code to detect team token position
         // Abort this loop if started or stopped.
         while (!(isStarted() || isStopRequested())) {
-            if (gamepad1.a){alianceColor = ALLIANCE_COLOR.RED;}
-            if (gamepad1.b){alianceColor = ALLIANCE_COLOR.BLUE;}
+            if (gamepad1.b){alianceColor = ALLIANCE_COLOR.RED;}
+            if (gamepad1.x){alianceColor = ALLIANCE_COLOR.BLUE;}
 
             if (gamepad1.left_bumper) {startPosition = START_POSITION.LEFT;}
             if (gamepad1.right_bumper) {startPosition = START_POSITION.RIGHT;}
@@ -117,11 +122,42 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         intakeLiftGoMId = gamepad2.dpad_left;
         intakeLiftGoBottom = gamepad2.dpad_down;
         //Servo controls
-        hangRelease = gamepad2.dpad_right;
+        if(gamepad1.b) {
+            hangRelease = true;
+        }
 
-        hangLiftControl  = gamepad2.left_trigger - gamepad2.right_trigger;
+        //hangLiftControl  = gamepad2.left_trigger - gamepad2.right_trigger;
 
-        driveModeChangeButton = gamepad1.y;
+        if (gamepad1.y) {
+            hangLiftHang = true;
+            hangLiftDrop = false;
+        }
+        if(gamepad1.a) {
+            hangLiftHang = false;
+            hangLiftDrop = true;
+        }
+
+        if(gamepad2.dpad_down) {
+            intakeLiftPosition = 1;
+        }
+        if(gamepad2.dpad_left) {
+            intakeLiftPosition = 2;
+        }
+        if(gamepad2.dpad_right) {
+            intakeLiftPosition = 3;
+        }
+        if(gamepad2.dpad_up) {
+            intakeLiftPosition = 4;
+        }
+
+        if(gamepad2.left_bumper) {
+            clawOpen = true;
+        }
+        if(gamepad2.right_bumper) {
+            clawOpen = false;
+        }
+
+        driveModeChangeButton = gamepad1.x;
      }
     private void drivebaseUpdate()
     {
@@ -135,18 +171,24 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private void telemetryUpdate()
     {
         telemetry.addData("Hang State = ", hangRelease);
+        telemetry.addData("Field Centric = ", FieldCentric);
+        telemetry.addData("Gyro Value = ", drivetrain.getCurrentHeading());
         telemetry.update();
     }
 
-    private void intakeLiftUpdate()
-    {
-        if (intakeLiftGoTop)
-        {
-            intakeLift.setLiftPosition(intakeLift.liftMaxHeight);
+
+    private void intakeLiftUpdate() {
+        if(intakeLiftPosition == 1) {
+            intakeLift.setLiftPosition(intakeLift.LIFT_POS_1);
         }
-        else if (intakeLiftGoBottom)
-        {
-            intakeLift.setLiftPosition(0);
+        else if(intakeLiftPosition == 2) {
+            intakeLift.setLiftPosition(intakeLift.LIFT_POS_2);
+        }
+        else if(intakeLiftPosition == 3) {
+            intakeLift.setLiftPosition(intakeLift.LIFT_POS_3);
+        }
+        else if(intakeLiftPosition == 4) {
+            intakeLift.setLiftPosition(intakeLift.LIFT_POS_4);
         }
     }
 
@@ -165,7 +207,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             gamepadsUpdate();
             //Process the joysticks for drivebase motion
             drivebaseUpdate();
-            //Update the intake lift
+            //Update the intake
             intakeLiftUpdate();
             //Update the hang lift
             hangLiftUpdate();
@@ -174,7 +216,6 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
             if(driveModeChangeButton && !lastButtonState) {
                 FieldCentric = !FieldCentric;
-                telemetry.addData("Field Centric = ", FieldCentric);
             }
 
             lastButtonState = driveModeChangeButton;

@@ -232,7 +232,6 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         configureMotors();
-        imu.resetYaw();
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
             telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
@@ -265,6 +264,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     }
 
     private void dropPurplePixel(int position) {
+        imu.resetYaw();
 
         if(position == 1) {
             driveStraight(DRIVE_SPEED, distanceDropPos1, 0);

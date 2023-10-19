@@ -8,7 +8,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class SubSystemIntakeLift {
     // Instantiate the drivetrain motor variables
     private DcMotorEx intakeLift;
-    public int liftMaxHeight = 3300;
+    public int LIFT_POS_1 = 0;
+    public int LIFT_POS_2 = 0;
+    public int LIFT_POS_3 = 1000;
+    public int LIFT_POS_4 = 3000;
 
     public SubSystemIntakeLift(HardwareMap hardwareMap) throws InterruptedException {                 // Motor Mapping
         // Initialize the motor hardware variables. Note that the strings used here as parameters
@@ -30,12 +33,10 @@ public class SubSystemIntakeLift {
     }
 
     public int getLiftEncoders(){
-
         return intakeLift.getCurrentPosition();
     }
 
-    public void setLift(double speed){
-
+    public void setLift(double speed) {
         intakeLift.setPower(speed);
     }
 
