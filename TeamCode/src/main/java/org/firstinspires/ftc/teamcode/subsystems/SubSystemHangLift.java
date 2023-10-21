@@ -5,6 +5,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.SubSystemVariables;
+
 public class SubSystemHangLift {
     // Instantiate the drivetrain motor variables
     private DcMotorEx hangLift;
@@ -17,9 +19,8 @@ public class SubSystemHangLift {
         hangLift = hardwareMap.get(DcMotorEx.class, "hangLift");
         hangRelease = hardwareMap.get(Servo.class, "hangRelease"); //Sets the names of the hardware on the hardware map
 
-        SubSystemHangState(false);
-
         resetLiftEncoder();
+        setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
     }
 
     public void SubSystemHangState(boolean state) {
@@ -36,11 +37,21 @@ public class SubSystemHangLift {
         hangLift.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         //Make sure we re-enable the use of encoders
         hangLift.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        hangLift.setTargetPosition(0);
+        hangLift.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
     }
 
-    public void setLift(double speed){
+    public void setHangLiftPower(double speed){
 
         hangLift.setPower(speed);
+    }
+
+    public void setHangLiftPos(int position) {
+        hangLift.setTargetPosition(position);
+    }
+
+    public int getHangLiftEncoder() {
+        return hangLift.getCurrentPosition();
     }
 
 }

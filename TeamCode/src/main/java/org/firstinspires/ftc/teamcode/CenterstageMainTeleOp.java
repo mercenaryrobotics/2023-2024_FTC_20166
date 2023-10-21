@@ -1,16 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
-import static java.lang.Boolean.TRUE;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemClaw;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemClawArm;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemDroneLaunch;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
-
-import java.lang.reflect.Field;
 
 @TeleOp
 
@@ -18,7 +17,6 @@ import java.lang.reflect.Field;
 public class CenterstageMainTeleOp extends LinearOpMode {
     private ElapsedTime runtime     = new ElapsedTime();
     private boolean hangLiftHang = false;
-    private boolean hangLiftDrop = true;
     private int intakeLiftPosition = 1;
     private boolean clawOpen = false;
 
@@ -34,13 +32,14 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private SubSystemDrivetrain drivetrain=null;
     private SubSystemIntakeLift intakeLift = null;
     private SubSystemHangLift hangLift = null;
+    private SubSystemClaw claw = null;
+    private SubSystemDroneLaunch drone = null;
+
+    private SubSystemClawArm clawArm = null;
 
     private double joystickTranslateX = 0.0;
     private double joystickTranslateY = 0.0;
     private double joystickRotate = 0.0;
-    private boolean intakeLiftGoTop = false;
-    private boolean intakeLiftGoMId = false;
-    private boolean intakeLiftGoBottom = false;
 
     private boolean hangRelease = false;
     private double hangLiftControl = 0.0;
@@ -54,11 +53,16 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private double joystick2RightXOffset = 0.0;
     private double joystick2RightYOffset = 0.0;
 
+    private int liftpos;
+
     public void initHardware() throws InterruptedException {
         drivetrain = new SubSystemDrivetrain(hardwareMap);
-        drivetrain.resetGyro();
+        //drivetrain.resetGyro();
         intakeLift = new SubSystemIntakeLift(hardwareMap);
         hangLift   = new SubSystemHangLift(hardwareMap);
+        clawArm    = new SubSystemClawArm(hardwareMap);
+        claw       = new SubSystemClaw(hardwareMap);
+        drone      = new SubSystemDroneLaunch(hardwareMap);
 
         gamepadsReset();
     }
@@ -91,8 +95,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private void disableHardware() {
 
         drivetrain.disableDrivetrainMotors();
-        intakeLift.setLift(0);
-        hangLift.setLift(0);
+        intakeLift.setIntakeLiftPower(SubSystemVariables.INTAKE_LIFT_POWER);
+        hangLift.setHangLiftPower(0);
     }
 
     private void gamepadsReset()
@@ -117,24 +121,12 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         joystickTranslateX = gamepad1.left_stick_x - joystick1LeftXOffset;
         joystickTranslateY = gamepad1.left_stick_y - joystick1LeftYOffset;
         joystickRotate     = gamepad1.right_stick_x - joystick1RightXOffset;
-        //intake lift controls
-        intakeLiftGoTop = gamepad2.dpad_up;
-        intakeLiftGoMId = gamepad2.dpad_left;
-        intakeLiftGoBottom = gamepad2.dpad_down;
-        //Servo controls
-        if(gamepad1.b) {
-            hangRelease = true;
-        }
-
-        //hangLiftControl  = gamepad2.left_trigger - gamepad2.right_trigger;
 
         if (gamepad1.y) {
             hangLiftHang = true;
-            hangLiftDrop = false;
         }
         if(gamepad1.a) {
             hangLiftHang = false;
-            hangLiftDrop = true;
         }
 
         if(gamepad2.dpad_down) {
@@ -143,11 +135,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         if(gamepad2.dpad_left) {
             intakeLiftPosition = 2;
         }
-        if(gamepad2.dpad_right) {
-            intakeLiftPosition = 3;
-        }
         if(gamepad2.dpad_up) {
-            intakeLiftPosition = 4;
+            intakeLiftPosition = 3;
         }
 
         if(gamepad2.left_bumper) {
@@ -157,7 +146,19 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             clawOpen = false;
         }
 
+        if(gamepad2.y) {
+            claw.changeClawPosition();
+            SubSystemVariables.CLAW_OPEN = !SubSystemVariables.CLAW_OPEN;
+        }
+
+        if(gamepad2.right_stick_button) {
+            drone.launchDrone();
+        }
+
         driveModeChangeButton = gamepad1.x;
+
+        if (gamepad1.b)
+            hangRelease = true;
      }
     private void drivebaseUpdate()
     {
@@ -173,30 +174,47 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         telemetry.addData("Hang State = ", hangRelease);
         telemetry.addData("Field Centric = ", FieldCentric);
         telemetry.addData("Gyro Value = ", drivetrain.getCurrentHeading());
+        telemetry.addData("Hang Motor = ", hangLift.getHangLiftEncoder());
+        telemetry.addData("ClawArm motor = ", clawArm.getClawArmEncoders());
+        telemetry.addData("IntakeLift motor = ", intakeLift.getLiftEncoders());
+        telemetry.addData("Lift position = ", intakeLiftPosition);
+        telemetry.addData("Lift position set = ", liftpos);
+        telemetry.addData("hangLiftHang = ", hangLiftHang);
+
         telemetry.update();
     }
 
 
     private void intakeLiftUpdate() {
         if(intakeLiftPosition == 1) {
-            intakeLift.setLiftPosition(intakeLift.LIFT_POS_1);
+            intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_1);
+            liftpos = SubSystemVariables.INTAKE_LIFT_POS_1;
+            intakeLift.setIntakeLiftPower(1);
         }
         else if(intakeLiftPosition == 2) {
-            intakeLift.setLiftPosition(intakeLift.LIFT_POS_2);
+            intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_2);
+            liftpos = SubSystemVariables.INTAKE_LIFT_POS_2;
+            intakeLift.setIntakeLiftPower(1);
         }
         else if(intakeLiftPosition == 3) {
-            intakeLift.setLiftPosition(intakeLift.LIFT_POS_3);
-        }
-        else if(intakeLiftPosition == 4) {
-            intakeLift.setLiftPosition(intakeLift.LIFT_POS_4);
+            intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_3);
+            liftpos = SubSystemVariables.INTAKE_LIFT_POS_3;
+            intakeLift.setIntakeLiftPower(1);
         }
     }
 
     private void hangLiftUpdate()
     {
-        hangLift.setLift(hangLiftControl);
-
-        hangLift.SubSystemHangState(hangRelease);
+         if(hangLiftHang) {
+             //Move the intake lift out of the way
+             intakeLiftPosition = 2;
+            hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
+            hangLift.setHangLiftPos(SubSystemVariables.HANG_LIFT_POS_HANG);
+        } else {
+            hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_DROP_POWER);
+            hangLift.setHangLiftPos(SubSystemVariables.HANG_LIFT_POS_DROP);
+        }
+         hangLift.SubSystemHangState(hangRelease);
     }
 
     private void doTeleop()

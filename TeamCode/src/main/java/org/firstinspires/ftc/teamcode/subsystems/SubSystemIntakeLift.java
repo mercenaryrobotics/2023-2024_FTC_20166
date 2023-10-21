@@ -5,13 +5,12 @@ import static java.lang.Thread.sleep;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.SubSystemVariables;
+
 public class SubSystemIntakeLift {
     // Instantiate the drivetrain motor variables
     private DcMotorEx intakeLift;
-    public int LIFT_POS_1 = 0;
-    public int LIFT_POS_2 = 0;
-    public int LIFT_POS_3 = 1000;
-    public int LIFT_POS_4 = 3000;
+
 
     public SubSystemIntakeLift(HardwareMap hardwareMap) throws InterruptedException {                 // Motor Mapping
         // Initialize the motor hardware variables. Note that the strings used here as parameters
@@ -20,7 +19,7 @@ public class SubSystemIntakeLift {
         intakeLift  = hardwareMap.get(DcMotorEx.class, "intakeLift");      //Sets the names of the hardware on the hardware map
 
         resetLiftEncoder();
-        setLift(1);
+        setIntakeLiftPower(SubSystemVariables.INTAKE_LIFT_POWER);
     }
 
     private void resetLiftEncoder(){
@@ -36,7 +35,7 @@ public class SubSystemIntakeLift {
         return intakeLift.getCurrentPosition();
     }
 
-    public void setLift(double speed) {
+    public void setIntakeLiftPower(double speed) {
         intakeLift.setPower(speed);
     }
 
