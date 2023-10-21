@@ -15,10 +15,11 @@ public class SubSystemDroneLaunch {
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
         drone = hardwareMap.get(Servo.class, "drone");      //Sets the names of the hardware on the hardware map
+        drone.setPosition(.65);
     }
 
     public void launchDrone() {
-        drone.setPosition(1);
+        drone.setPosition(.51);
     }
 
 }

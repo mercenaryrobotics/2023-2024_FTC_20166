@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 public class CenterstageMainTeleOp extends LinearOpMode {
     private ElapsedTime runtime     = new ElapsedTime();
     private boolean hangLiftHang = false;
-    private int intakeLiftPosition = 1;
+    private int intakeLiftPosition = 0;
     private boolean clawOpen = false;
 
     private enum ALLIANCE_COLOR {RED, BLUE}
@@ -54,6 +54,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private double joystick2RightYOffset = 0.0;
 
     private int liftpos;
+    private boolean droneLaunchState = false;
 
     public void initHardware() throws InterruptedException {
         drivetrain = new SubSystemDrivetrain(hardwareMap);
@@ -135,7 +136,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         if(gamepad2.dpad_left) {
             intakeLiftPosition = 2;
         }
-        if(gamepad2.dpad_up) {
+        if(gamepad2.dpad_right) {
             intakeLiftPosition = 3;
         }
 
@@ -151,8 +152,13 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             SubSystemVariables.CLAW_OPEN = !SubSystemVariables.CLAW_OPEN;
         }
 
-        if(gamepad2.right_stick_button) {
-            drone.launchDrone();
+        if (gamepad2.left_bumper)
+            claw.closeClaw(false);
+        if(gamepad2.right_bumper)
+            claw.closeClaw(true);
+
+        if(gamepad2.b) {
+            droneLaunchState = true;
         }
 
         driveModeChangeButton = gamepad1.x;
@@ -180,23 +186,33 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         telemetry.addData("Lift position = ", intakeLiftPosition);
         telemetry.addData("Lift position set = ", liftpos);
         telemetry.addData("hangLiftHang = ", hangLiftHang);
+        telemetry.addData("Drone launch = ", droneLaunchState);
 
         telemetry.update();
     }
 
 
     private void intakeLiftUpdate() {
-        if(intakeLiftPosition == 1) {
+        if(intakeLiftPosition == 0) {
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
+            intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_0);
+            liftpos = SubSystemVariables.INTAKE_LIFT_POS_1;
+            intakeLift.setIntakeLiftPower(1);
+        }
+        else if(intakeLiftPosition == 1) {
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_1);
             intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_1);
             liftpos = SubSystemVariables.INTAKE_LIFT_POS_1;
             intakeLift.setIntakeLiftPower(1);
         }
         else if(intakeLiftPosition == 2) {
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
             intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_2);
             liftpos = SubSystemVariables.INTAKE_LIFT_POS_2;
             intakeLift.setIntakeLiftPower(1);
         }
         else if(intakeLiftPosition == 3) {
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_3);
             intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_3);
             liftpos = SubSystemVariables.INTAKE_LIFT_POS_3;
             intakeLift.setIntakeLiftPower(1);
@@ -217,6 +233,22 @@ public class CenterstageMainTeleOp extends LinearOpMode {
          hangLift.SubSystemHangState(hangRelease);
     }
 
+    private void droneUpdate()
+    {
+        if (droneLaunchState)
+            drone.launchDrone();
+    }
+
+    private void updateSubSystems()
+    {
+        //Update the intake
+        intakeLiftUpdate();
+        //Update the hang lift
+        hangLiftUpdate();
+        //Update the drone launch
+        droneUpdate();
+    }
+
     private void doTeleop()
     {
         while(opModeIsActive())
@@ -225,10 +257,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             gamepadsUpdate();
             //Process the joysticks for drivebase motion
             drivebaseUpdate();
-            //Update the intake
-            intakeLiftUpdate();
-            //Update the hang lift
-            hangLiftUpdate();
+            //Update lift, claw etc...
+            updateSubSystems();
             //Update telemetry
             telemetryUpdate();
 
@@ -247,7 +277,10 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initHardware();
-
+        //Grab the pixel before moving anything else
+        clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
+        sleep(200);
+        updateSubSystems();
         waitStart();
         runtime.reset();
 
