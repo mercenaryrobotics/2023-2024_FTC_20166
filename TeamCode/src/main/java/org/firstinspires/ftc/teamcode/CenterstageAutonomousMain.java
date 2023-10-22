@@ -41,6 +41,8 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemClaw;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemClawArm;
 
 /*
  *  This OpMode illustrates the concept of driving an autonomous path based on Gyro (IMU) heading and encoder counts.
@@ -94,12 +96,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 //@Disabled
 public class CenterstageAutonomousMain extends LinearOpMode {
 
+    private SubSystemClawArm clawArm = null;
+    private SubSystemClaw claw = null;
+
     /* Declare OpMode members. */
     private DcMotor frontLeftDrive = null;
     private DcMotor frontRightDrive = null;
     private DcMotor backRightDrive = null;
     private DcMotor backLeftDrive = null;
-    private DistanceSensor distanceSensor;
+    private DistanceSensor leftDistanceSensor;
+    private DistanceSensor rightDistanceSensor;
 
     private IMU             imu         = null;      // Control/Expansion Hub IMU
 
@@ -145,20 +151,25 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
     private final double distanceDropPos1 = 29.0;
     private final double finishDistancePos1 = 2.0;
-    private final double distanceDropPos2 = 29.0;
+    private final double distanceDropPos2 = 29.0 - 4.0;
     private final double distanceDropPos3 = 29.0;
     private final double finishDistancePos3 = 3.0;
     private int propStartingPos = 0;
 
+    private int SCANNING_DISTANCE = 15;
 
-    public void initializeMotors() {
+    public void initializeMotors() throws InterruptedException {
         // Initialize the drive system variables.
         frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeftDrive");
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
         backLeftDrive = hardwareMap.get(DcMotor.class, "backLeftDrive");
         backRightDrive = hardwareMap.get(DcMotor.class, "backRightDrive");
 
-        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
+        clawArm    = new SubSystemClawArm(hardwareMap);
+        claw       = new SubSystemClaw(hardwareMap);
+
+        leftDistanceSensor = hardwareMap.get(DistanceSensor.class, "leftDistanceSensor");
+        rightDistanceSensor = hardwareMap.get(DistanceSensor.class, "rightDistanceSensor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
@@ -214,7 +225,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
         initializeMotors();
 
         /* The next two lines define Hub orientation.
@@ -232,24 +243,80 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         configureMotors();
+        claw.closeClaw(true);
+        sleep(500);
+        clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
             telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
-            telemetry.addData("Distance Sensor: ", distanceSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("Distance Sensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
             telemetry.addData("propStartingPos: ", propStartingPos);
             telemetry.update();
-            propPosition = detectProp();
         }
 
         imu.resetYaw();
-        dropPurplePixel(propPosition);
+        //AutonSimpleDropPixelCenter(2);
+        AutonDistanceDropPixel();
 
 
+    }
+    private void AutonDistanceDropPixel() {
+        driveStraight(DRIVE_SPEED, SCANNING_DISTANCE, 0);
+        propPosition = detectPropDistance();
+        processPropPosition(propPosition);
+    }
+
+    private void processPropPosition(int position) {
+        if(position == 1) {
+            driveStraight(DRIVE_SPEED, 4, 0);
+            sleep(500);
+            turnToHeading(TURN_SPEED, 45);
+            holdHeading(TURN_SPEED, 45, 0.5);
+            clawArm.setClawArmPosition(0);
+            sleep(1000);
+            claw.closeClaw(false);
+            sleep(1000);
+        } else if (position == 2) {
+            driveStraight(DRIVE_SPEED, distanceDropPos2 - SCANNING_DISTANCE, 0);
+            clawArm.setClawArmPosition(0);
+            sleep(1000);
+            claw.closeClaw(false);
+            sleep(1000);
+            driveStraight(DRIVE_SPEED, -4, 0);
+            sleep(1000);
+
+        } else /*if (position == 3) */ {
+            driveStraight(DRIVE_SPEED, 4, 0);
+            sleep(500);
+            turnToHeading(TURN_SPEED, -45);
+            holdHeading(TURN_SPEED, -45, 0.5);
+            driveStraight(DRIVE_SPEED, 3, -45);
+            clawArm.setClawArmPosition(0);
+            sleep(1000);
+            claw.closeClaw(false);
+            sleep(1000);
+        }
+    }
+
+    private int detectPropDistance() {
+        sleep(500);
+        //while(opModeIsActive()) {
+            //telemetry.addData("Left Distance: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
+            //telemetry.addData("Right Distance: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
+            //telemetry.update();
+        //}
+        if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 400) {
+            return 1;
+        } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 400) {
+            return 3;
+        } else {
+            return 2;
+        }
 
     }
 
     private int detectProp() {
-
+        /*
         if(gamepad1.dpad_left) {
             propStartingPos = 1;
         } else if (gamepad1.dpad_up) {
@@ -257,13 +324,14 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         } else if (gamepad1.dpad_right) {
             propStartingPos = 3;
         }
+         */
 
-        return propStartingPos;
+        return 2;
 
 
     }
 
-    private void dropPurplePixel(int position) {
+    private void AutonSimpleDropPixelCenter(int position) {
         imu.resetYaw();
 
         if(position == 1) {
@@ -274,6 +342,14 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         } else if (position == 2) {
             driveStraight(DRIVE_SPEED, distanceDropPos2, 0);
+            clawArm.setClawArmPosition(0);
+            sleep(1000);
+            claw.closeClaw(false);
+            sleep(1000);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            driveStraight(DRIVE_SPEED, -4, 0);
+            clawArm.setClawArmPosition(0);
+            sleep(1000);
 
         }  else /*if (position == 3)*/ {
             driveStraight(DRIVE_SPEED, distanceDropPos3, 0);
@@ -283,6 +359,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         }
 
     }
+
 
     /*
      * ====================================================================================================

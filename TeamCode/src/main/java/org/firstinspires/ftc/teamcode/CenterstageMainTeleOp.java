@@ -18,7 +18,9 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private ElapsedTime runtime     = new ElapsedTime();
     private boolean hangLiftHang = false;
     private int intakeLiftPosition = 0;
-    private boolean clawOpen = false;
+    private boolean clawClosed = false;
+    private boolean togglePressed;
+    private boolean lastTogglePressed;
 
     private enum ALLIANCE_COLOR {RED, BLUE}
     private enum START_POSITION {LEFT, RIGHT}
@@ -139,31 +141,38 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         if(gamepad2.dpad_right) {
             intakeLiftPosition = 3;
         }
+        if(gamepad2.dpad_up) {
+            intakeLiftPosition = 0;
+        }
+
 
         if(gamepad2.left_bumper) {
-            clawOpen = true;
+            clawClosed = false;
         }
+
         if(gamepad2.right_bumper) {
-            clawOpen = false;
+            clawClosed = true;
         }
 
-        if(gamepad2.y) {
-            claw.changeClawPosition();
-            SubSystemVariables.CLAW_OPEN = !SubSystemVariables.CLAW_OPEN;
+        if((gamepad2.right_trigger > 0.5) || (gamepad2.left_trigger > 0.5)) {
+            togglePressed = true;
+        } else {
+            togglePressed = false;
         }
 
-        if (gamepad2.left_bumper)
-            claw.closeClaw(false);
-        if(gamepad2.right_bumper)
-            claw.closeClaw(true);
+        if(togglePressed && !lastTogglePressed) {
+            clawClosed = !clawClosed;
+        }
 
-        if(gamepad2.b) {
+        lastTogglePressed = togglePressed;
+
+        if(gamepad2.b && gamepad2.left_stick_button) {
             droneLaunchState = true;
         }
 
         driveModeChangeButton = gamepad1.x;
 
-        if (gamepad1.b)
+        if (gamepad1.b && gamepad1.dpad_right)
             hangRelease = true;
      }
     private void drivebaseUpdate()
@@ -187,6 +196,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         telemetry.addData("Lift position set = ", liftpos);
         telemetry.addData("hangLiftHang = ", hangLiftHang);
         telemetry.addData("Drone launch = ", droneLaunchState);
+        telemetry.addData("ClawClosed? = ", clawClosed);
 
         telemetry.update();
     }
@@ -219,6 +229,10 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         }
     }
 
+    private void clawUpdate() {
+        claw.closeClaw(clawClosed);
+    }
+
     private void hangLiftUpdate()
     {
          if(hangLiftHang) {
@@ -247,6 +261,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         hangLiftUpdate();
         //Update the drone launch
         droneUpdate();
+        //Updates the claw servo
+        clawUpdate();
     }
 
     private void doTeleop()
@@ -279,7 +295,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         initHardware();
         //Grab the pixel before moving anything else
         clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
-        sleep(200);
+        //sleep(200);
         updateSubSystems();
         waitStart();
         runtime.reset();

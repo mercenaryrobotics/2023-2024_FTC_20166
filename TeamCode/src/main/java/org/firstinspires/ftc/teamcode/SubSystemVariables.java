@@ -12,6 +12,7 @@ public class SubSystemVariables {
     public static int CLAW_ARM_POS_2 = 250;
     public static int CLAW_ARM_POS_3 = 250;
 
+
     public static double INTAKE_LIFT_POWER = 0.4;
 
     public static double HANG_LIFT_HANG_POWER = 0.5;
@@ -19,7 +20,7 @@ public class SubSystemVariables {
 
     public static int HANG_LIFT_POS_DROP = 0;
 
-    public static int HANG_LIFT_POS_HANG = -5000;
+    public static int HANG_LIFT_POS_HANG = -8000;
 
     public static boolean CLAW_OPEN = false;
 }
