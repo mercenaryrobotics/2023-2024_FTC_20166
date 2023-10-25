@@ -156,7 +156,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     private final double finishDistancePos3 = 3.0;
     private int propStartingPos = 0;
 
-    private final int SCANNING_DISTANCE = 15;
+    private int SCANNING_DISTANCE = 15;
 
     public void initializeMotors() throws InterruptedException {
         // Initialize the drive system variables.
@@ -224,30 +224,6 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-    private void updateTelemetry() {
-        //telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
-        //telemetry.addData("Distance Sensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
-        //telemetry.addData("propStartingPos: ", propStartingPos);
-
-        telemetry.addData("Alliance Color: ", SubSystemVariables.allianceColor);
-        telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
-        telemetry.update();
-    }
-
-    private void updateButtonPressed() {
-        if(gamepad2.x) {
-            SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.BLUE;
-        } else if (gamepad2.b) {
-            SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.RED;
-        }
-
-        if(gamepad2.left_bumper) {
-            SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.BOTTOM;
-        } else if (gamepad2.right_bumper) {
-            SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.TOP;
-        }
-    }
-
     @Override
     public void runOpMode() throws InterruptedException {
         initializeMotors();
@@ -272,43 +248,16 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
-            updateTelemetry();
-            updateButtonPressed();
+            telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
+            telemetry.addData("Distance Sensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("propStartingPos: ", propStartingPos);
+            telemetry.update();
         }
 
         imu.resetYaw();
+        //AutonSimpleDropPixelCenter(2);
         AutonDistanceDropPixel();
-        AutonMoveToBackstage();
 
-
-    }
-
-    private void AutonMoveToBackstage() {
-            if (SubSystemVariables.allianceColor.equals("BLUE")) {
-            SubSystemVariables.headingToBackboard = 90;
-        }
-
-        if (SubSystemVariables.allianceColor.equals("RED")) {
-            SubSystemVariables.headingToBackboard = -90;
-        }
-
-        if(SubSystemVariables.allianceSide.equals("BOTTOM")) {
-            SubSystemVariables.distToBackboard = 54;
-        }
-
-        if(SubSystemVariables.allianceSide.equals("TOP")) {
-            SubSystemVariables.distToBackboard = 18;
-        }
-
-        turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-        holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-        driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
-        turnToHeading(TURN_SPEED, 180);
-        holdHeading(TURN_SPEED, 180, 0.5);
-        driveStraight(DRIVE_SPEED, 18, 180);
-        turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-        holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-        driveStraight(DRIVE_SPEED, 18, SubSystemVariables.headingToBackboard);
 
     }
     private void AutonDistanceDropPixel() {
