@@ -133,14 +133,14 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR) /
-                                                      (WHEEL_DIAMETER_INCHES * 3.1415);
+            (WHEEL_DIAMETER_INCHES * 3.1415);
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
     static final double     DRIVE_SPEED             = 0.4;     // Max driving speed for better distance accuracy.
     static final double     TURN_SPEED              = 0.2;     // Max Turn speed to limit turn rate
     static final double     HEADING_THRESHOLD       = 1.0 ;    // How close must the heading get to the target before moving to next step.
-                                                               // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
+    // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
     // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
     // Increase these numbers if the heading does not corrects strongly enough (eg: a heavy robot or using tracks)
@@ -156,7 +156,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     private final double finishDistancePos3 = 3.0;
     private int propStartingPos = 0;
 
-    private int SCANNING_DISTANCE = 15;
+    private final int SCANNING_DISTANCE = 15;
 
     public void initializeMotors() throws InterruptedException {
         // Initialize the drive system variables.
@@ -224,6 +224,30 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+    private void updateTelemetry() {
+        //telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
+        //telemetry.addData("Distance Sensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
+        //telemetry.addData("propStartingPos: ", propStartingPos);
+
+        telemetry.addData("Alliance Color: ", SubSystemVariables.allianceColor);
+        telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
+        telemetry.update();
+    }
+
+    private void updateButtonPressed() {
+        if(gamepad2.x) {
+            SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.BLUE;
+        } else if (gamepad2.b) {
+            SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.RED;
+        }
+
+        if(gamepad2.left_bumper) {
+            SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.BOTTOM;
+        } else if (gamepad2.right_bumper) {
+            SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.TOP;
+        }
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
         initializeMotors();
@@ -248,16 +272,43 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
-            telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
-            telemetry.addData("Distance Sensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
-            telemetry.addData("propStartingPos: ", propStartingPos);
-            telemetry.update();
+            updateTelemetry();
+            updateButtonPressed();
         }
 
         imu.resetYaw();
-        //AutonSimpleDropPixelCenter(2);
         AutonDistanceDropPixel();
+        AutonMoveToBackstage();
 
+
+    }
+
+    private void AutonMoveToBackstage() {
+        if (SubSystemVariables.allianceColor.equals("BLUE")) {
+            SubSystemVariables.headingToBackboard = 90;
+        }
+
+        if (SubSystemVariables.allianceColor.equals("RED")) {
+            SubSystemVariables.headingToBackboard = -90;
+        }
+
+        if(SubSystemVariables.allianceSide.equals("BOTTOM")) {
+            SubSystemVariables.distToBackboard = 54;
+        }
+
+        if(SubSystemVariables.allianceSide.equals("TOP")) {
+            SubSystemVariables.distToBackboard = 18;
+        }
+
+        turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+        holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+        driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+        turnToHeading(TURN_SPEED, 180);
+        holdHeading(TURN_SPEED, 180, 0.5);
+        driveStraight(DRIVE_SPEED, 18, 180);
+        turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+        holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+        driveStraight(DRIVE_SPEED, 18, SubSystemVariables.headingToBackboard);
 
     }
     private void AutonDistanceDropPixel() {
@@ -301,9 +352,9 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     private int detectPropDistance() {
         sleep(500);
         //while(opModeIsActive()) {
-            //telemetry.addData("Left Distance: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
-            //telemetry.addData("Right Distance: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
-            //telemetry.update();
+        //telemetry.addData("Left Distance: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
+        //telemetry.addData("Right Distance: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
+        //telemetry.update();
         //}
         if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 400) {
             return 1;
@@ -371,17 +422,17 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     // **********  HIGH Level driving functions.  ********************
 
     /**
-    *  Drive in a straight line, on a fixed compass heading (angle), based on encoder counts.
-    *  Move will stop if either of these conditions occur:
-    *  1) Move gets to the desired position
-    *  2) Driver stops the OpMode running.
-    *
-    * @param maxDriveSpeed MAX Speed for forward/rev motion (range 0 to +1.0) .
-    * @param distance   Distance (in inches) to move from current position.  Negative distance means move backward.
-    * @param heading      Absolute Heading Angle (in Degrees) relative to last gyro reset.
-    *                   0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-    *                   If a relative angle is required, add/subtract from the current robotHeading.
-    */
+     *  Drive in a straight line, on a fixed compass heading (angle), based on encoder counts.
+     *  Move will stop if either of these conditions occur:
+     *  1) Move gets to the desired position
+     *  2) Driver stops the OpMode running.
+     *
+     * @param maxDriveSpeed MAX Speed for forward/rev motion (range 0 to +1.0) .
+     * @param distance   Distance (in inches) to move from current position.  Negative distance means move backward.
+     * @param heading      Absolute Heading Angle (in Degrees) relative to last gyro reset.
+     *                   0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *                   If a relative angle is required, add/subtract from the current robotHeading.
+     */
     public void driveStraight(double maxDriveSpeed,
                               double distance,
                               double heading) {
@@ -412,7 +463,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
             // keep looping while we are still active, and BOTH motors are running.
             while (opModeIsActive() &&
-                   (frontLeftDrive.isBusy() && frontRightDrive.isBusy())) {
+                    (frontLeftDrive.isBusy() && frontRightDrive.isBusy())) {
 
                 // Determine required steering to keep on heading
                 turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
