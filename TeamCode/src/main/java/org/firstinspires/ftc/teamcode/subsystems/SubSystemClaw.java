@@ -27,7 +27,7 @@ public class SubSystemClaw {
             claw.setPosition(0); // To close
         }
     }
-    public void closeClaw(boolean clawClosed){
+    public void closeClaw(boolean clawClosed) {
         if (clawClosed) {
             claw.setPosition(0);
             SubSystemVariables.CLAW_OPEN = false;
