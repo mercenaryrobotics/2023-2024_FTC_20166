@@ -28,7 +28,7 @@
  */
 
 package org.firstinspires.ftc.teamcode;
-//Steve test
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
