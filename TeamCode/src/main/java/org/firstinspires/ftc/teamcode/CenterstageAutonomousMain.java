@@ -29,6 +29,9 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.SubSystemVariables.ALLIANCE_COLOR.BLUE;
+import static org.firstinspires.ftc.teamcode.SubSystemVariables.ALLIANCE_COLOR.RED;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -43,6 +46,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemClaw;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemClawArm;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 
 /*
  *  This OpMode illustrates the concept of driving an autonomous path based on Gyro (IMU) heading and encoder counts.
@@ -95,7 +99,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemClawArm;
 @Autonomous
 //@Disabled
 public class CenterstageAutonomousMain extends LinearOpMode {
-
+    private boolean isTestBot = true;
     private SubSystemClawArm clawArm = null;
     private SubSystemClaw claw = null;
 
@@ -157,6 +161,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     private int propStartingPos = 0;
 
     private final int SCANNING_DISTANCE = 15;
+    private SubSystemDrivetrain driveTerrain;
 
     public void initializeMotors() throws InterruptedException {
         // Initialize the drive system variables.
@@ -167,6 +172,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         clawArm    = new SubSystemClawArm(hardwareMap);
         claw       = new SubSystemClaw(hardwareMap);
+        driveTerrain = new SubSystemDrivetrain(hardwareMap);
 
         leftDistanceSensor = hardwareMap.get(DistanceSensor.class, "leftDistanceSensor");
         rightDistanceSensor = hardwareMap.get(DistanceSensor.class, "rightDistanceSensor");
@@ -231,12 +237,13 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         telemetry.addData("Alliance Color: ", SubSystemVariables.allianceColor);
         telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
+        telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
         telemetry.update();
     }
 
     private void updateButtonPressed() {
         if(gamepad2.x) {
-            SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.BLUE;
+            SubSystemVariables.allianceColor = BLUE;
         } else if (gamepad2.b) {
             SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.RED;
         }
@@ -278,25 +285,26 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         imu.resetYaw();
         AutonDistanceDropPixel();
+        updateTelemetry();
         AutonMoveToBackstage();
 
 
     }
 
     private void AutonMoveToBackstage() {
-        if (SubSystemVariables.allianceColor.equals("BLUE")) {
+        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
             SubSystemVariables.headingToBackboard = 90;
         }
 
-        if (SubSystemVariables.allianceColor.equals("RED")) {
+        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
             SubSystemVariables.headingToBackboard = -90;
         }
 
-        if(SubSystemVariables.allianceSide.equals("BOTTOM")) {
-            SubSystemVariables.distToBackboard = 54;
+        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
+            SubSystemVariables.distToBackboard = 72;
         }
 
-        if(SubSystemVariables.allianceSide.equals("TOP")) {
+        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
             SubSystemVariables.distToBackboard = 18;
         }
 
@@ -333,7 +341,6 @@ public class CenterstageAutonomousMain extends LinearOpMode {
             sleep(1000);
             claw.closeClaw(false);
             sleep(1000);
-            driveStraight(DRIVE_SPEED, -4, 0);
             sleep(1000);
 
         } else /*if (position == 3) */ {
@@ -620,7 +627,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
      * @param straight  Set to true if we are driving straight, and the encoder positions should be included in the telemetry.
      */
     private void sendTelemetry(boolean straight) {
-
+        telemetry.addData("Gyro val: ", imu.getRobotYawPitchRollAngles());
         if (straight) {
             telemetry.addData("Motion", "Drive Straight");
             telemetry.addData("Target Pos L:R",  "%7d:%7d",      leftTarget,  rightTarget);
