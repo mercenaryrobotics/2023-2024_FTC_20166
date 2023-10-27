@@ -30,7 +30,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.SubSystemVariables.ALLIANCE_COLOR.BLUE;
-import static org.firstinspires.ftc.teamcode.SubSystemVariables.ALLIANCE_COLOR.RED;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -237,7 +236,8 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         telemetry.addData("Alliance Color: ", SubSystemVariables.allianceColor);
         telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
-        telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
+        //telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
+        telemetry.addData("Parking Position", SubSystemVariables.parkingPos);
         telemetry.update();
     }
 
@@ -252,6 +252,30 @@ public class CenterstageAutonomousMain extends LinearOpMode {
             SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.BOTTOM;
         } else if (gamepad2.right_bumper) {
             SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.TOP;
+        }
+
+        if(gamepad2.left_trigger > 0.5) {
+            SubSystemVariables.parkingPos = "corner";
+        } else if (gamepad2.right_trigger > 0.5) {
+            SubSystemVariables.parkingPos = "backboard";
+        }
+    }
+
+    private void finalizeVariables() {
+        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            SubSystemVariables.headingToBackboard = 90;
+        }
+
+        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+            SubSystemVariables.headingToBackboard = -90;
+        }
+
+        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
+            SubSystemVariables.distToBackboard = 72;
+        }
+
+        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
+            SubSystemVariables.distToBackboard = 24;
         }
     }
 
@@ -284,39 +308,30 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         }
 
         imu.resetYaw();
+        finalizeVariables();
+
         AutonDistanceDropPixel();
-        updateTelemetry();
         AutonMoveToBackstage();
 
 
     }
 
     private void AutonMoveToBackstage() {
-        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
-            SubSystemVariables.headingToBackboard = 90;
-        }
-
-        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-            SubSystemVariables.headingToBackboard = -90;
-        }
-
-        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
-            SubSystemVariables.distToBackboard = 72;
-        }
-
-        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-            SubSystemVariables.distToBackboard = 18;
-        }
-
         turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
         holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
         driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
-        turnToHeading(TURN_SPEED, 180);
-        holdHeading(TURN_SPEED, 180, 0.5);
-        driveStraight(DRIVE_SPEED, 18, 180);
-        turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-        holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-        driveStraight(DRIVE_SPEED, 18, SubSystemVariables.headingToBackboard);
+
+        if(SubSystemVariables.parkingPos.equals("corner")) {
+            turnToHeading(TURN_SPEED, 180);
+            holdHeading(TURN_SPEED, 180, 0.5);
+            driveStraight(DRIVE_SPEED, 18, 180);
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, 18, SubSystemVariables.headingToBackboard);
+        } else /* if(SubSystemVariables.parkingPos.equals("backboard"))*/ {
+            driveStraight(DRIVE_SPEED, 12, SubSystemVariables.headingToBackboard);
+        }
+
 
     }
     private void AutonDistanceDropPixel() {
@@ -335,6 +350,11 @@ public class CenterstageAutonomousMain extends LinearOpMode {
             sleep(1000);
             claw.closeClaw(false);
             sleep(1000);
+
+            turnToHeading(TURN_SPEED, 0);
+            holdHeading(TURN_SPEED, 0, 0.5);
+            driveStraight(DRIVE_SPEED, distanceDropPos2 - (SCANNING_DISTANCE + 4), 0);
+
         } else if (position == 2) {
             driveStraight(DRIVE_SPEED, distanceDropPos2 - SCANNING_DISTANCE, 0);
             clawArm.setClawArmPosition(0);
@@ -353,6 +373,11 @@ public class CenterstageAutonomousMain extends LinearOpMode {
             sleep(1000);
             claw.closeClaw(false);
             sleep(1000);
+            driveStraight(DRIVE_SPEED, -2, -45);
+
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, 6, SubSystemVariables.headingToBackboard);
         }
     }
 
