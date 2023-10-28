@@ -112,5 +112,14 @@ public class Motor_Test extends LinearOpMode {
             dashboardDemo();
         }
     }
+
+    public void changeServo(boolean servoTester) {
+        if (servoTester) {
+            testServo.setPosition(.5);
+
+        } else {
+            testServo.setPosition(0);
+        }
+    }
 }
 

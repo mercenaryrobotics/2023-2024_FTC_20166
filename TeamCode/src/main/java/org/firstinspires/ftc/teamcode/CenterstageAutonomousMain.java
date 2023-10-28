@@ -159,7 +159,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     private final double finishDistancePos3 = 3.0;
     private int propStartingPos = 0;
 
-    private final int SCANNING_DISTANCE = 15;
+    private final int SCANNING_DISTANCE = 9;
     private SubSystemDrivetrain driveTerrain;
 
     public void initializeMotors() throws InterruptedException {
@@ -238,6 +238,8 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
         //telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
         telemetry.addData("Parking Position", SubSystemVariables.parkingPos);
+        telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
+        telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
         telemetry.update();
     }
 
@@ -299,7 +301,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         configureMotors();
         claw.closeClaw(true);
-        sleep(500);
+        sleep(1000);
         clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
@@ -312,7 +314,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         AutonDistanceDropPixel();
         AutonMoveToBackstage();
-
+        clawArm.setClawArmPosition(0);
 
     }
 
@@ -324,14 +326,13 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         if(SubSystemVariables.parkingPos.equals("corner")) {
             turnToHeading(TURN_SPEED, 180);
             holdHeading(TURN_SPEED, 180, 0.5);
-            driveStraight(DRIVE_SPEED, 18, 180);
+            driveStraight(DRIVE_SPEED, 22, 180);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-            driveStraight(DRIVE_SPEED, 18, SubSystemVariables.headingToBackboard);
-        } else /* if(SubSystemVariables.parkingPos.equals("backboard"))*/ {
             driveStraight(DRIVE_SPEED, 12, SubSystemVariables.headingToBackboard);
+        } else /* if(SubSystemVariables.parkingPos.equals("backboard"))*/ {
+            driveStraight(DRIVE_SPEED, 10, SubSystemVariables.headingToBackboard);
         }
-
 
     }
     private void AutonDistanceDropPixel() {
@@ -342,42 +343,52 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
     private void processPropPosition(int position) {
         if(position == 1) {
-            driveStraight(DRIVE_SPEED, 4, 0);
+            driveStraight(DRIVE_SPEED, 29 - (SCANNING_DISTANCE + 1), 0);
+            turnToHeading(TURN_SPEED, 90);
+            holdHeading(TURN_SPEED, 90, 0.5);
+            driveStraight(DRIVE_SPEED + 0.3, 8, 90);
             sleep(500);
-            turnToHeading(TURN_SPEED, 45);
-            holdHeading(TURN_SPEED, 45, 0.5);
+            driveStraight(DRIVE_SPEED, -10, 90);
+            sleep(500);
             clawArm.setClawArmPosition(0);
             sleep(1000);
             claw.closeClaw(false);
+            sleep(500);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
             sleep(1000);
-
-            turnToHeading(TURN_SPEED, 0);
-            holdHeading(TURN_SPEED, 0, 0.5);
-            driveStraight(DRIVE_SPEED, distanceDropPos2 - (SCANNING_DISTANCE + 4), 0);
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
 
         } else if (position == 2) {
             driveStraight(DRIVE_SPEED, distanceDropPos2 - SCANNING_DISTANCE, 0);
-            clawArm.setClawArmPosition(0);
-            sleep(1000);
-            claw.closeClaw(false);
-            sleep(1000);
-            sleep(1000);
-
-        } else /*if (position == 3) */ {
-            driveStraight(DRIVE_SPEED, 4, 0);
+            driveStraight(DRIVE_SPEED + 0.3, 8, 0);
             sleep(500);
-            turnToHeading(TURN_SPEED, -45);
-            holdHeading(TURN_SPEED, -45, 0.5);
-            driveStraight(DRIVE_SPEED, 3, -45);
+            driveStraight(DRIVE_SPEED, -8, 0);
+            sleep(500);
             clawArm.setClawArmPosition(0);
             sleep(1000);
             claw.closeClaw(false);
             sleep(1000);
-            driveStraight(DRIVE_SPEED, -2, -45);
-
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-            driveStraight(DRIVE_SPEED, 6, SubSystemVariables.headingToBackboard);
+
+        } else /*if (position == 3) */ {
+            driveStraight(DRIVE_SPEED, 29 - (SCANNING_DISTANCE + 3), 0);
+            turnToHeading(TURN_SPEED, -90);
+            holdHeading(TURN_SPEED, -90, 0.5);
+            driveStraight(DRIVE_SPEED + 0.3, 8, -90);
+            sleep(500);
+            driveStraight(DRIVE_SPEED, -10, -90);
+            sleep(500);
+            clawArm.setClawArmPosition(0);
+            sleep(1000);
+            claw.closeClaw(false);
+            sleep(500);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            sleep(1000);
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
         }
     }
 
@@ -388,7 +399,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         //telemetry.addData("Right Distance: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
         //telemetry.update();
         //}
-        if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 400) {
+        if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 450) {
             return 1;
         } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 400) {
             return 3;

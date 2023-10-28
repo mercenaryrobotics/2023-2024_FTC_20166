@@ -17,7 +17,7 @@ public class SubSystemClaw {
         // step (using the FTC Robot Controller app on the phone).
         claw = hardwareMap.get(Servo.class, "claw");      //Sets the names of the hardware on the hardware map
         //Make sure close at the start
-        closeClaw(true);
+        //closeClaw(true);
     }
 
     public void changeClawPosition() {
@@ -29,11 +29,12 @@ public class SubSystemClaw {
     }
     public void closeClaw(boolean clawClosed) {
         if (clawClosed) {
-            claw.setPosition(0);
+            claw.setPosition(.5);
             SubSystemVariables.CLAW_OPEN = false;
+
         }
         else {
-            claw.setPosition(.5);
+            claw.setPosition(0);
             SubSystemVariables.CLAW_OPEN = true;
         }
     }
