@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp (name = "Motor_Test" ,group = "Linear Opmode")
 
@@ -28,8 +29,9 @@ public class Motor_Test extends LinearOpMode {
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
 
+    private Servo testServo = null;
 
-    public void initializeMotors()
+    public void initializeHardware()
     {
         frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftDrive");
         frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightDrive");
@@ -48,6 +50,9 @@ public class Motor_Test extends LinearOpMode {
         frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        testServo = hardwareMap.get(Servo.class, "hopperGate");
+        testServo.setPosition(0);
     }
 
     private static void rotatePoints(double[] xPoints, double[] yPoints, double angle) {
@@ -95,7 +100,7 @@ public class Motor_Test extends LinearOpMode {
 
     public void runOpMode()  {
         initializeDashboard();
-        initializeMotors();
+        initializeHardware();
 
         waitForStart();
         while (opModeIsActive()) {
@@ -113,13 +118,8 @@ public class Motor_Test extends LinearOpMode {
         }
     }
 
-    public void changeServo(boolean servoTester) {
-        if (servoTester) {
-            testServo.setPosition(.5);
-
-        } else {
-            testServo.setPosition(0);
-        }
+    public void setServo(double position) {
+        testServo.setPosition(position);
     }
 }
 
