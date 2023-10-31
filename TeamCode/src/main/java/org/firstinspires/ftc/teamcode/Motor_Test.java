@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
@@ -12,9 +13,11 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp (name = "Motor_Test" ,group = "Linear Opmode")
+import org.firstinspires.ftc.robotcontroller.external.samples.SampleRevBlinkinLedDriver;
 
-@Disabled
+@TeleOp
+@Config
+//@Disabled
 public class Motor_Test extends LinearOpMode {
     //Dashboard demo variables
     public static double ORBITAL_FREQUENCY = 0.05;
@@ -30,9 +33,15 @@ public class Motor_Test extends LinearOpMode {
     private DcMotorEx backRightDrive = null;
 
     private Servo testServo = null;
+    private Servo torqueServo = null;
+    private Servo hopperServo = null;
+
+    public static double servoMax = 1.0;
+    public static double servoMin = 0.0;
 
     public void initializeHardware()
     {
+        /*
         frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftDrive");
         frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightDrive");
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftDrive");
@@ -51,8 +60,11 @@ public class Motor_Test extends LinearOpMode {
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+         */
+
         testServo = hardwareMap.get(Servo.class, "hopperGate");
-        testServo.setPosition(0);
+        torqueServo = hardwareMap.get(Servo.class, "torqueServo");
+        hopperServo = hardwareMap.get(Servo.class, "hopperServo");
     }
 
     private static void rotatePoints(double[] xPoints, double[] yPoints, double angle) {
@@ -64,8 +76,7 @@ public class Motor_Test extends LinearOpMode {
         }
     }
 
-    public void initializeDashboard()
-    {
+    public void initializeDashboard() {
         dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
@@ -98,28 +109,44 @@ public class Motor_Test extends LinearOpMode {
         sleep(20);
     }
 
+    private void displayTelemetry() {
+        telemetry.addLine("hello world");
+        updateTelemetry(telemetry);
+    }
+
     public void runOpMode()  {
         initializeDashboard();
         initializeHardware();
 
         waitForStart();
         while (opModeIsActive()) {
-            telemetry.addData("FL (0)", frontLeftDrive.getCurrentPosition());
-            telemetry.addData("FR (1)", frontRightDrive.getCurrentPosition());
-            telemetry.addData("BL (2)", backLeftDrive.getCurrentPosition());
-            telemetry.addData("BR (3)", backRightDrive.getCurrentPosition());
-            updateTelemetry(telemetry);
-
-            frontLeftDrive.setPower(-gamepad1.left_stick_y);
-            backLeftDrive.setPower(-gamepad1.left_stick_y);
-            frontRightDrive.setPower(-gamepad1.right_stick_y);
-            backRightDrive.setPower(-gamepad1.right_stick_y);
-            dashboardDemo();
+            displayTelemetry();
+            updateController();
         }
     }
 
-    public void setServo(double position) {
-        testServo.setPosition(position);
+    private void updateController() {
+        if(gamepad1.left_bumper)
+            setServoPos(0.8); //0.8 is open for gate servo
+
+        if(gamepad1.right_bumper)
+            setServoPos(1); //1 is closed gate servo
+
+        if(gamepad1.left_trigger > 0.5)
+            setTorqueServoPos(0);
+
+        if(gamepad1.right_trigger > 0.5)
+            setTorqueServoPos(1);
+
+        if(gamepad1.x)
+            setHopperServo(servoMin); //HopperServo is 0.05 for down
+
+        if(gamepad1.b)
+            setHopperServo(servoMax); //HopperServo is 0.4 for up
     }
+
+    private void setHopperServo(double pos) {hopperServo.setPosition(pos);}
+    private void setTorqueServoPos(double pos) {torqueServo.setPosition(pos);}
+    private void setServoPos(double pos) {testServo.setPosition(pos);}
 }
 
