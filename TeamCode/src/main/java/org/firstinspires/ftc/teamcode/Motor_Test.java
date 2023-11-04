@@ -139,14 +139,14 @@ public class Motor_Test extends LinearOpMode {
             setTorqueServoPos(1);
 
         if(gamepad1.x)
-            setHopperServo(servoMin); //HopperServo is 0.05 for down
+            setHopperServo(servoMax); //HopperServo is 0.05 for down
 
         if(gamepad1.b)
-            setHopperServo(servoMax); //HopperServo is 0.4 for up
+            setHopperServo(servoMin); //HopperServo is 0.4 for up
     }
 
     private void setHopperServo(double pos) {hopperServo.setPosition(pos);}
     private void setTorqueServoPos(double pos) {torqueServo.setPosition(pos);}
-    private void setServoPos(double pos) {testServo.setPosition(pos);}
+    0private void setServoPos(double pos) {testServo.setPosition(pos);}
 }
 

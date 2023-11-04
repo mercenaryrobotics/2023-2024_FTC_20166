@@ -212,18 +212,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
 
     private void telemetryUpdate()
     {
-        telemetry.addData("Hang State = ", hangRelease);
-        telemetry.addData("Field Centric = ", FieldCentric);
-        telemetry.addData("Gyro Value = ", drivetrain.getCurrentHeading());
-        telemetry.addData("Hang Motor = ", hangLift.getHangLiftEncoder());
-        telemetry.addData("ClawArm motor = ", clawArm.getClawArmEncoders());
-        telemetry.addData("IntakeLift motor = ", intakeLift.getLiftEncoders());
-        telemetry.addData("Lift position = ", intakeLiftPosition);
-        telemetry.addData("Lift position set = ", liftpos);
-        telemetry.addData("hangLiftHang = ", hangLiftHang);
-        telemetry.addData("Drone launch = ", droneLaunchState);
-        telemetry.addData("ClawClosed? = ", clawClosed);
-
+        telemetry.addLine("Iniyann is the greatest programmer and driving in the whole world");
         telemetry.update();
     }
 

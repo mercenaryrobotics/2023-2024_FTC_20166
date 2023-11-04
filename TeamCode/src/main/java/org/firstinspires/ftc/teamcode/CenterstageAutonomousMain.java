@@ -314,6 +314,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         AutonDistanceDropPixel();
         AutonMoveToBackstage();
+        sleep(1000);
         clawArm.setClawArmPosition(0);
 
     }
