@@ -41,7 +41,7 @@ public class Motor_Test extends LinearOpMode {
 
     public void initializeHardware()
     {
-        /*
+
         frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftDrive");
         frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightDrive");
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftDrive");
@@ -60,7 +60,13 @@ public class Motor_Test extends LinearOpMode {
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-         */
+        frontLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         testServo = hardwareMap.get(Servo.class, "hopperGate");
         torqueServo = hardwareMap.get(Servo.class, "torqueServo");
@@ -111,6 +117,7 @@ public class Motor_Test extends LinearOpMode {
 
     private void displayTelemetry() {
         telemetry.addLine("hello world");
+        telemetry.addData("motor encoder: ", frontLeftDrive.getCurrentPosition());
         updateTelemetry(telemetry);
     }
 
@@ -126,6 +133,7 @@ public class Motor_Test extends LinearOpMode {
     }
 
     private void updateController() {
+        /*
         if(gamepad1.left_bumper)
             setServoPos(0.8); //0.8 is open for gate servo
 
@@ -143,10 +151,20 @@ public class Motor_Test extends LinearOpMode {
 
         if(gamepad1.b)
             setHopperServo(servoMin); //HopperServo is 0.4 for up
+         */
+
+        if(gamepad1.left_trigger > 0.1) { // -3200 is max
+            frontLeftDrive.setPower(gamepad1.left_trigger);
+        } else if (gamepad1.right_trigger > 0.1 ) {
+            frontLeftDrive.setPower(-gamepad1.right_trigger);
+        } else {
+            frontLeftDrive.setPower(0);
+        }
+
     }
 
     private void setHopperServo(double pos) {hopperServo.setPosition(pos);}
     private void setTorqueServoPos(double pos) {torqueServo.setPosition(pos);}
-    0private void setServoPos(double pos) {testServo.setPosition(pos);}
+    private void setServoPos(double pos) {testServo.setPosition(pos);}
 }
 

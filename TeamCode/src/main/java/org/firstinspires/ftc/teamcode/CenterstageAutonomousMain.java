@@ -121,8 +121,8 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     private double  turnSpeed     = 0;
     private double  leftSpeed     = 0;
     private double  rightSpeed    = 0;
-    private int     leftTarget    = 0;
-    private int     rightTarget   = 0;
+    private int backTarget = 0;
+    private int frontTarget = 0;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -132,10 +132,13 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
 
     static final double     CORRECTION_FACTOR       = (60.0/58.0);
+    static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0);
     static final double     COUNTS_PER_MOTOR_REV    = 537.7 ;   // eg: GoBILDA 312 RPM Yellow Jacket
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR) /
+            (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double     COUNTS_PER_INCH_STRAFE         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR_STRAFE) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
     // These constants define the desired driving/control characteristics
@@ -261,6 +264,12 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         } else if (gamepad2.right_trigger > 0.5) {
             SubSystemVariables.parkingPos = "backboard";
         }
+
+        if(gamepad2.dpad_left) {
+            strafe(1, 15);
+        } else if (gamepad2.dpad_right) {
+            strafe(1, -15);
+        }
     }
 
     private void finalizeVariables() {
@@ -302,6 +311,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         configureMotors();
         claw.closeClaw(true);
         sleep(1000);
+        clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
@@ -314,26 +324,56 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
         AutonDistanceDropPixel();
         AutonMoveToBackstage();
-        sleep(1000);
-        clawArm.setClawArmPosition(0);
+
 
     }
 
     private void AutonMoveToBackstage() {
-        turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-        holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-        driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+        if(propPosition == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard + 180);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard + 180, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard + 180);
+        }
+
+        if(propPosition == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+
+        }
+
+        if(propPosition == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+        }
+
+        if(propPosition == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard + 180);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard + 180, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard + 180);
+        }
+
+        if(propPosition == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+
+        }
+
+        if(propPosition == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+        }
 
         if(SubSystemVariables.parkingPos.equals("corner")) {
             turnToHeading(TURN_SPEED, 180);
             holdHeading(TURN_SPEED, 180, 0.5);
-            driveStraight(DRIVE_SPEED, 22, 180);
+            driveStraight(DRIVE_SPEED, 18, 180);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
             driveStraight(DRIVE_SPEED, 12, SubSystemVariables.headingToBackboard);
         } else /* if(SubSystemVariables.parkingPos.equals("backboard"))*/ {
             driveStraight(DRIVE_SPEED, 10, SubSystemVariables.headingToBackboard);
         }
+
+        sleep(1000);
+        clawArm.setClawArmPosition(0);
 
     }
     private void AutonDistanceDropPixel() {
@@ -357,8 +397,6 @@ public class CenterstageAutonomousMain extends LinearOpMode {
             sleep(500);
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
             sleep(1000);
-            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
 
         } else if (position == 2) {
             driveStraight(DRIVE_SPEED, distanceDropPos2 - SCANNING_DISTANCE, 0);
@@ -371,8 +409,6 @@ public class CenterstageAutonomousMain extends LinearOpMode {
             claw.closeClaw(false);
             sleep(1000);
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
-            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
 
         } else /*if (position == 3) */ {
             driveStraight(DRIVE_SPEED, 29 - (SCANNING_DISTANCE + 3), 0);
@@ -388,8 +424,6 @@ public class CenterstageAutonomousMain extends LinearOpMode {
             sleep(500);
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
             sleep(1000);
-            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
         }
     }
 
@@ -482,54 +516,101 @@ public class CenterstageAutonomousMain extends LinearOpMode {
                               double heading) {
 
         // Ensure that the OpMode is still active
-        if (opModeIsActive()) {
 
-            // Determine new target position, and pass to motor controller
-            int moveCounts = (int)(distance * COUNTS_PER_INCH);
-            leftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
-            rightTarget = frontRightDrive.getCurrentPosition() + moveCounts;
+        // Determine new target position, and pass to motor controller
+        int moveCounts = (int) (distance * COUNTS_PER_INCH);
+        backTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
+        frontTarget = frontRightDrive.getCurrentPosition() + moveCounts;
 
-            // Set Target FIRST, then turn on RUN_TO_POSITION
-            frontLeftDrive.setTargetPosition(leftTarget);
-            backLeftDrive.setTargetPosition(leftTarget);
-            frontRightDrive.setTargetPosition(rightTarget);
-            backRightDrive.setTargetPosition(rightTarget);
+        // Set Target FIRST, then turn on RUN_TO_POSITION
+        frontLeftDrive.setTargetPosition(backTarget);
+        backLeftDrive.setTargetPosition(backTarget);
+        frontRightDrive.setTargetPosition(frontTarget);
+        backRightDrive.setTargetPosition(frontTarget);
 
-            frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            // Set the required driving speed  (must be positive for RUN_TO_POSITION)
-            // Start driving straight, and then enter the control loop
-            maxDriveSpeed = Math.abs(maxDriveSpeed);
-            moveRobot(maxDriveSpeed, 0);
+        // Set the required driving speed  (must be positive for RUN_TO_POSITION)
+        // Start driving straight, and then enter the control loop
+        maxDriveSpeed = Math.abs(maxDriveSpeed);
+        moveRobot(maxDriveSpeed, 0);
 
-            // keep looping while we are still active, and BOTH motors are running.
-            while (opModeIsActive() &&
-                    (frontLeftDrive.isBusy() && frontRightDrive.isBusy())) {
+        // keep looping while we are still active, and BOTH motors are running.
+        while (/*opModeIsActive() &&*/
+                (frontLeftDrive.isBusy() && frontRightDrive.isBusy())) {
 
-                // Determine required steering to keep on heading
-                turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
+            // Determine required steering to keep on heading
+            turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
 
-                // if driving in reverse, the motor correction also needs to be reversed
-                if (distance < 0)
-                    turnSpeed *= -1.0;
+            // if driving in reverse, the motor correction also needs to be reversed
+            if (distance < 0)
+                turnSpeed *= -1.0;
 
-                // Apply the turning correction to the current driving speed.
-                moveRobot(driveSpeed, turnSpeed);
+            // Apply the turning correction to the current driving speed.
+            moveRobot(driveSpeed, turnSpeed);
 
-                // Display drive status for the driver.
-                sendTelemetry(true);
-            }
-
-            // Stop all motion & Turn off RUN_TO_POSITION
-            moveRobot(0, 0);
-            frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            // Display drive status for the driver.
+            sendTelemetry(true);
         }
+
+        // Stop all motion & Turn off RUN_TO_POSITION
+        moveRobot(0, 0);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    private void strafe (double maxDriveSpeed, double distance) {
+        // Ensure that the OpMode is still active
+        // Determine new target position, and pass to motor controller
+        int moveCounts = (int)(distance * COUNTS_PER_INCH_STRAFE);
+        backTarget = backLeftDrive.getCurrentPosition() + moveCounts;
+        frontTarget = frontLeftDrive.getCurrentPosition() - moveCounts;
+
+        // Set Target FIRST, then turn on RUN_TO_POSITION
+        frontLeftDrive.setTargetPosition(frontTarget);
+        backLeftDrive.setTargetPosition(backTarget);
+        frontRightDrive.setTargetPosition(backTarget);
+        backRightDrive.setTargetPosition(frontTarget);
+
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Set the required driving speed  (must be positive for RUN_TO_POSITION)
+        // Start driving straight, and then enter the control loop
+        maxDriveSpeed = Math.abs(maxDriveSpeed);
+        moveRobot(maxDriveSpeed, 0);
+
+        // keep looping while we are still active, and BOTH motors are running.
+        while (/*opModeIsActive() &&
+                (frontLeftDrive.isBusy() &&*/ frontRightDrive.isBusy()) {
+
+            // Determine required steering to keep on heading
+            turnSpeed = 0; //getSteeringCorrection(heading, P_DRIVE_GAIN);
+
+            // if driving in reverse, the motor correction also needs to be reversed
+            if (distance < 0)
+                turnSpeed *= -1.0;
+
+            // Apply the turning correction to the current driving speed.
+            moveRobot(driveSpeed, turnSpeed);
+
+            // Display drive status for the driver.
+            sendTelemetry(true);
+        }
+
+        // Stop all motion & Turn off RUN_TO_POSITION
+        moveRobot(0, 0);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     /**
@@ -667,7 +748,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         telemetry.addData("Gyro val: ", imu.getRobotYawPitchRollAngles());
         if (straight) {
             telemetry.addData("Motion", "Drive Straight");
-            telemetry.addData("Target Pos L:R",  "%7d:%7d",      leftTarget,  rightTarget);
+            telemetry.addData("Target Pos L:R",  "%7d:%7d", backTarget, frontTarget);
             telemetry.addData("Actual Pos L:R",  "%7d:%7d",      frontLeftDrive.getCurrentPosition(),
                     frontRightDrive.getCurrentPosition());
         } else {
