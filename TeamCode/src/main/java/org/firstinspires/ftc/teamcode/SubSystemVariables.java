@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
+
+@Config
 public class SubSystemVariables {
     public static double distToBackboard;
     public static int headingToBackboard;
@@ -23,7 +26,7 @@ public class SubSystemVariables {
 
     public static final int HANG_LIFT_POS_DROP = 0;
 
-    public static final int HANG_LIFT_POS_HANG = -8000;
+    public static final int HANG_LIFT_POS_HANG = -4000;
 
     public static boolean CLAW_OPEN = false;
     public static enum ALLIANCE_COLOR {BLUE, RED};
@@ -32,9 +35,17 @@ public class SubSystemVariables {
     public static ALLIANCE_SIDE allianceSide = ALLIANCE_SIDE.BOTTOM;
     public static String parkingPos = "backboard";
 
-    public static double HOPPER_SERVO_DOWN = 0.05;
-    public static double HOPPER_SERVO_UP = 0.4;
     public static double HOPPER_GATE_OPEN = 0.8;
     public static double HOPPER_GATE_CLOSE = 1;
 
+    public static double HOPPER_LIFT_POWER = 0.6;
+    public static int HOPPER_LIFT_POS_1 = 0;
+    public static int HOPPER_LIFT_POS_2 = -1300;
+    public static int HOPPER_LIFT_POS_3 = -2500;
+    public static int HOPPER_LIFT_POS_4 = -3000;
+
+    public static double HOPPER_POS_1 = 1;
+    public static double HOPPER_POS_2 = 0.8;
+    public static double HOPPER_POS_3 = 0.7;
+    public static double HOPPER_POS_4 = 0.6;
 }

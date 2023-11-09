@@ -29,11 +29,8 @@ public class SubSystemHopper {
         }
     }
 
-    public void moveHopper(String position) {
-        if(position.equals("down")) {
-            hopperServo.setPosition(SubSystemVariables.HOPPER_SERVO_DOWN);
-        } else if (position.equals("up")) {
-            hopperServo.setPosition(SubSystemVariables.HOPPER_SERVO_UP);
-        }
+
+    public void setHopperPosition(double position) {
+        hopperServo.setPosition(position);
     }
 }

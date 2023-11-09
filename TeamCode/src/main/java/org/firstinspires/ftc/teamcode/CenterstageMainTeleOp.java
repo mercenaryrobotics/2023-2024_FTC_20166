@@ -21,6 +21,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private boolean clawClosed = false;
     private boolean togglePressed;
     private boolean lastTogglePressed;
+    private boolean hangLiftDrop;
 
     private enum ALLIANCE_COLOR {RED, BLUE}
     private enum START_POSITION {LEFT, RIGHT}
@@ -128,11 +129,16 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         joystickTranslateY = gamepad1.left_stick_y - joystick1LeftYOffset;
         joystickRotate     = gamepad1.right_stick_x - joystick1RightXOffset;
 
-        if (gamepad1.y) {
+        if (gamepad1.y && hangRelease) {
             hangLiftHang = true;
-        }
-        if(gamepad1.a) {
+        } else {
             hangLiftHang = false;
+        }
+
+        if(gamepad1.a) {
+            hangLiftDrop = true;
+        } else {
+            hangLiftDrop = false;
         }
 
         if(gamepad2.dpad_down) {
@@ -240,13 +246,19 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     {
          if(hangLiftHang) {
              //Move the intake lift out of the way
+             /*
              intakeLiftPosition = 2;
             hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
             hangLift.setHangLiftPos(SubSystemVariables.HANG_LIFT_POS_HANG);
+              */
+             hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
+             hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() - 150);
+        } else if (hangLiftDrop) {
+             hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
+             hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() + 150);
         } else {
-            hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_DROP_POWER);
-            hangLift.setHangLiftPos(SubSystemVariables.HANG_LIFT_POS_DROP);
-        }
+             //hangLift.setHangLiftPos(hangLift.getHangLiftEncoder());
+         }
          hangLift.SubSystemHangState(hangRelease);
     }
 

@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDroneLaunch;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopper;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopperLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
 @TeleOp
@@ -24,6 +25,9 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private boolean lastTogglePressed;
     private String hopperState = "down";
     private boolean hopperOpen;
+
+    private int hopperLiftPosition = 1;
+    private boolean hangLiftDrop;
 
     private enum ALLIANCE_COLOR {RED, BLUE}
     private enum START_POSITION {LEFT, RIGHT}
@@ -41,6 +45,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private SubSystemDroneLaunch drone = null;
     private SubSystemClawArm clawArm = null;
     private SubSystemHopper hopper = null;
+    private SubSystemHopperLift hopperLift = null;
 
     private double joystickTranslateX = 0.0;
     private double joystickTranslateY = 0.0;
@@ -67,8 +72,9 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         hangLift   = new SubSystemHangLift(hardwareMap);
         clawArm    = new SubSystemClawArm(hardwareMap);
         claw       = new SubSystemClaw(hardwareMap);
-        hopper       = new SubSystemHopper(hardwareMap);
-        drone        = new SubSystemDroneLaunch(hardwareMap);
+        hopper     = new SubSystemHopper(hardwareMap);
+        drone      = new SubSystemDroneLaunch(hardwareMap);
+        hopperLift = new SubSystemHopperLift(hardwareMap);
 
         gamepadsReset();
     }
@@ -127,14 +133,20 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         joystickTranslateY = gamepad1.left_stick_y - joystick1LeftYOffset;
         joystickRotate     = gamepad1.right_stick_x - joystick1RightXOffset;
 
-        /*
-        if (gamepad1.y) {
+
+        if (gamepad1.y && hangRelease) {
             hangLiftHang = true;
-        }
-        if(gamepad1.a) {
+        } else {
             hangLiftHang = false;
         }
 
+        if(gamepad1.a) {
+            hangLiftDrop = true;
+        } else {
+            hangLiftDrop = false;
+        }
+
+        /*
         if(gamepad2.dpad_down) {
             intakeLiftPosition = 1;
         }
@@ -185,20 +197,67 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
             hopperState = "down";
         }
 
-        if(gamepad2.dpad_left) {
+        if(gamepad1.left_trigger > 0.5) {
             hopperOpen = false;
         }
 
-        if(gamepad2.dpad_right) {
+        if(gamepad1.right_trigger > 0.5 ) {
             hopperOpen = true;
         }
+
+        if(gamepad2.a) {
+            hopperLiftPosition = 1;
+        }
+
+        if(gamepad2.x) {
+            hopperLiftPosition = 2;
+        }
+
+        if(gamepad2.y) {
+            hopperLiftPosition = 3;
+        }
+
+        if(gamepad2.b) {
+            hopperLiftPosition = 4;
+        }
+
+        /*
+        if(gamepad1.left_trigger > 0.1) { // -3200 is max
+            hopperLift.setHopperLiftPower(SubSystemVariables.HOPPER_LIFT_POWER);
+        } else if (gamepad1.right_trigger > 0.1 ) {
+            hopperLift.setHopperLiftPower(SubSystemVariables.HOPPER_LIFT_POWER);
+        } else {
+            hopperLift.setHopperLiftPower(0);
+        }
+        */
 
         driveModeChangeButton = gamepad1.x;
     }
 
     private void hopperUpdate() {
-        hopper.moveHopper(hopperState);
-        hopper.openGate(hopperOpen);
+        //hopper.openGate(hopperOpen);
+    }
+
+    private void hopperLiftUpdate() {
+        if(hopperLiftPosition == 1) {
+            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1);
+            hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_1);
+        }
+
+        if(hopperLiftPosition == 2) {
+            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_2);
+            hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_2);
+        }
+
+        if(hopperLiftPosition == 3) {
+            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_3);
+            hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_3);
+        }
+
+        if(hopperLiftPosition == 4) {
+            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_4);
+            hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_4);
+        }
     }
 
     private void drivebaseUpdate()
@@ -213,6 +272,9 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private void telemetryUpdate()
     {
         telemetry.addLine("Iniyann is the greatest programmer and driving in the whole world");
+        telemetry.addLine("Ashwin is so slay xoxo");
+        telemetry.addLine("Ashwin is the coolest and best monke ever xoxo");
+        telemetry.addData("motor pos: ", hopperLift.getLiftEncoders());
         telemetry.update();
     }
 
@@ -250,16 +312,22 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
 
     private void hangLiftUpdate()
     {
-         if(hangLiftHang) {
-             //Move the intake lift out of the way
+        if(hangLiftHang) {
+            //Move the intake lift out of the way
+             /*
              intakeLiftPosition = 2;
             hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
             hangLift.setHangLiftPos(SubSystemVariables.HANG_LIFT_POS_HANG);
+              */
+            hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
+            hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() - 150);
+        } else if (hangLiftDrop) {
+            hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
+            hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() + 150);
         } else {
-            hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_DROP_POWER);
-            hangLift.setHangLiftPos(SubSystemVariables.HANG_LIFT_POS_DROP);
+            //hangLift.setHangLiftPos(hangLift.getHangLiftEncoder());
         }
-         hangLift.SubSystemHangState(hangRelease);
+        hangLift.SubSystemHangState(hangRelease);
     }
 
     private void droneUpdate()
@@ -268,8 +336,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
             drone.launchDrone();
     }
 
-    private void updateSubSystems()
-    {
+    private void updateSubSystems() {
         //Update the intake
         intakeLiftUpdate();
         //Update the hang lift
@@ -280,6 +347,8 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         clawUpdate();
         //Updates the hopper gate and hopper position
         hopperUpdate();
+        //Updates the hopper lift position
+        hopperLiftUpdate();
     }
 
     private void doTeleop()
