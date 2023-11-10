@@ -31,6 +31,7 @@ public class Motor_Test extends LinearOpMode {
     private DcMotorEx frontRightDrive = null;
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
+    private DcMotorEx testMotor = null;
 
     private Servo testServo = null;
     private Servo torqueServo = null;
@@ -59,8 +60,10 @@ public class Motor_Test extends LinearOpMode {
         frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //testMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         frontLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        testMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

@@ -5,11 +5,16 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import static java.lang.Thread.sleep;
 
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 //import org.opencv.core.Mat;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -28,10 +33,15 @@ public class SubSystemDrivetrain {
     private DcMotorEx frontRightDrive;
     private DcMotorEx backLeftDrive;
     private DcMotorEx backRightDrive;
+    public FtcDashboard dashboard;
+
     private IMU imu;
     private double ZeroAngleOffset  = 0.0;
     private double speedDeadband = 0.05;
-
+    public static double FLP = 0.0;
+    public static double FRP = 0.0;
+    public static double BLP = 0.0;
+    public static double BRP = 0.0;
     private final double sqrt2   = Math.sqrt(2);
 
     public SubSystemDrivetrain(HardwareMap hardwareMap) throws InterruptedException {                 // Motor Mapping
@@ -126,6 +136,11 @@ public class SubSystemDrivetrain {
             BL = BL / max;
             BR = BR / max;
         }
+
+        FLP = FL;
+        FRP = FR;
+        BLP = BL;
+        BRP = BR;
 
         frontLeftDrive.setPower(FL);
         frontRightDrive.setPower(FR);

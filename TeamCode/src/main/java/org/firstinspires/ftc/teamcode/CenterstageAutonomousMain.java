@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.SubSystemVariables.ALLIANCE_COLOR.BLUE;
 
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -39,6 +40,8 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -101,6 +104,8 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     private boolean isTestBot = true;
     private SubSystemClawArm clawArm = null;
     private SubSystemClaw claw = null;
+    public FtcDashboard dashboard;
+
 
     /* Declare OpMode members. */
     private DcMotor frontLeftDrive = null;
@@ -188,6 +193,12 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         backRightDrive.setDirection(DcMotor.Direction.FORWARD);
     }
 
+    public void initializeDashboard() {
+        dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
+    }
+
     public void testProgram() {
         // Step through each leg of the path,
         // Notes:   Reverse movement is obtained by setting a negative distance (not speed)
@@ -241,8 +252,9 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
         //telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
         telemetry.addData("Parking Position", SubSystemVariables.parkingPos);
-        telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
-        telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
+        //telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
+        //telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
+        telemetry.addData("Park in backstage? ", SubSystemVariables.parkInBackstage);
         telemetry.update();
     }
 
@@ -266,9 +278,9 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         }
 
         if(gamepad2.dpad_left) {
-            strafe(1, 15);
+            SubSystemVariables.parkInBackstage = false;
         } else if (gamepad2.dpad_right) {
-            strafe(1, -15);
+            SubSystemVariables.parkInBackstage = true;
         }
     }
 
@@ -313,6 +325,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         sleep(1000);
         clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
+        initializeDashboard();
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
             updateTelemetry();
@@ -323,7 +336,9 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         finalizeVariables();
 
         AutonDistanceDropPixel();
-        AutonMoveToBackstage();
+        if(SubSystemVariables.parkInBackstage) {
+            AutonMoveToBackstage();
+        }
 
 
     }
@@ -336,7 +351,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         }
 
         if(propPosition == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-
+            strafe(SubSystemVariables.STRAFE_SPEED, SubSystemVariables.distToBackboard);
         }
 
         if(propPosition == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {

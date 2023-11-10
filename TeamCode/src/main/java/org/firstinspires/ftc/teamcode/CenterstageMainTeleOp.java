@@ -1,8 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemClaw;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemClawArm;
@@ -22,6 +25,11 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private boolean togglePressed;
     private boolean lastTogglePressed;
     private boolean hangLiftDrop;
+    private boolean endgame = false;
+
+    public FtcDashboard dashboard;
+
+
 
     private enum ALLIANCE_COLOR {RED, BLUE}
     private enum START_POSITION {LEFT, RIGHT}
@@ -122,6 +130,12 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         joystick2LeftYOffset = gamepad2.left_stick_y;
         joystick2RightYOffset = gamepad2.right_stick_y;
     }
+
+    public void initializeDashboard() {
+        dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
+    }
     private void gamepadsUpdate()
     {
         //Drive base motion controls
@@ -135,7 +149,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             hangLiftHang = false;
         }
 
-        if(gamepad1.a) {
+        if(gamepad1.a && hangRelease) {
             hangLiftDrop = true;
         } else {
             hangLiftDrop = false;
@@ -175,13 +189,13 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
         lastTogglePressed = togglePressed;
 
-        if(gamepad2.b && gamepad2.left_stick_button) {
+        if(gamepad2.b && gamepad2.left_stick_button && endgame) {
             droneLaunchState = true;
         }
 
         driveModeChangeButton = gamepad1.x;
 
-        if (gamepad1.b && gamepad1.dpad_right)
+        if (gamepad1.b && gamepad1.dpad_right && endgame)
             hangRelease = true;
      }
     private void drivebaseUpdate()
@@ -195,18 +209,12 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
     private void telemetryUpdate()
     {
-        telemetry.addData("Hang State = ", hangRelease);
-        telemetry.addData("Field Centric = ", FieldCentric);
-        telemetry.addData("Gyro Value = ", drivetrain.getCurrentHeading());
-        telemetry.addData("Hang Motor = ", hangLift.getHangLiftEncoder());
-        telemetry.addData("ClawArm motor = ", clawArm.getClawArmEncoders());
-        telemetry.addData("IntakeLift motor = ", intakeLift.getLiftEncoders());
-        telemetry.addData("Lift position = ", intakeLiftPosition);
-        telemetry.addData("Lift position set = ", liftpos);
-        telemetry.addData("hangLiftHang = ", hangLiftHang);
-        telemetry.addData("Drone launch = ", droneLaunchState);
-        telemetry.addData("ClawClosed? = ", clawClosed);
-
+        telemetry.addData("Timer: ", runtime.seconds() );
+        telemetry.addData("Hang release state: ", hangRelease);
+        telemetry.addData("front left power ", SubSystemDrivetrain.FLP);
+        telemetry.addData("front right power ", SubSystemDrivetrain.FRP);
+        telemetry.addData("back left power ", SubSystemDrivetrain.BLP);
+        telemetry.addData("back right power ", SubSystemDrivetrain.BRP);
         telemetry.update();
     }
 
@@ -244,21 +252,13 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
     private void hangLiftUpdate()
     {
-         if(hangLiftHang) {
-             //Move the intake lift out of the way
-             /*
-             intakeLiftPosition = 2;
-            hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
-            hangLift.setHangLiftPos(SubSystemVariables.HANG_LIFT_POS_HANG);
-              */
+         if(hangLiftHang && (hangLift.getHangLiftEncoder() > -5000)) {
              hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
              hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() - 150);
-        } else if (hangLiftDrop) {
+        } else if (hangLiftDrop && (hangLift.getHangLiftEncoder() < 0)) {
              hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
              hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() + 150);
-        } else {
-             //hangLift.setHangLiftPos(hangLift.getHangLiftEncoder());
-         }
+        }
          hangLift.SubSystemHangState(hangRelease);
     }
 
@@ -284,6 +284,10 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     {
         while(opModeIsActive())
         {
+            if(runtime.seconds() > 90) {
+                endgame = true;
+            }
+
             //Update the joystick reading
             gamepadsUpdate();
             //Process the joysticks for drivebase motion
@@ -308,6 +312,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initHardware();
+        //Initalizes FTC Dashboard
+        initializeDashboard();
         //Grab the pixel before moving anything else
         clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
         //sleep(200);
