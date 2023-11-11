@@ -350,12 +350,35 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
     }
 
-    private void park() {
+    private void parkNew() {
+
+        //if blue and prop position is 3 || if red and prop position is 1
+        if(((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) && (propPosition == 3) && (SubSystemVariables.parkingPos == 2))
+        ||
+        (((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) && (propPosition == 1) && (SubSystemVariables.parkingPos == 2)))) {
+            driveStraight(DRIVE_SPEED, -SubSystemVariables.distToBackboard, -SubSystemVariables.headingToBackboard);
+            driveStraight(DRIVE_SPEED, -14 , -SubSystemVariables.headingToBackboard);
+            //drive backwards
+        }
+
+        //if blue and prop position is 3 || if red and prop position is 1
+        if(((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) && (propPosition == 1) && (SubSystemVariables.parkingPos == 2))
+                ||
+                (((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) && (propPosition == 3) && (SubSystemVariables.parkingPos == 2)))) {
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+            driveStraight(DRIVE_SPEED, 14 , SubSystemVariables.headingToBackboard);
+            //drive forwards
+        }
+
+        if(((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 2 && SubSystemVariables.parkingPos == 2)
+        ||
+        (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 2 && SubSystemVariables.parkingPos == 2))) {
+
+        }
 
     }
 
     private void readyPark() {
-        2
 
     }
 
