@@ -29,8 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.SubSystemVariables.ALLIANCE_COLOR.BLUE;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -97,7 +95,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 
 @Autonomous
 //@Disabled
-public class CenterstageAutonomousMain_TEST extends LinearOpMode {
+public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
     private boolean isTestBot = true;
     private SubSystemClawArm clawArm = null;
     private SubSystemClaw claw = null;
@@ -140,7 +138,7 @@ public class CenterstageAutonomousMain_TEST extends LinearOpMode {
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
-    static final double     DRIVE_SPEED             = 0.4;     // Max driving speed for better distance accuracy.
+    private static final double     DRIVE_SPEED             = 0.7;     // Max driving speed for better distance accuracy.
     static final double     TURN_SPEED              = 0.2;     // Max Turn speed to limit turn rate
     static final double     HEADING_THRESHOLD       = 1.0 ;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
@@ -234,10 +232,11 @@ public class CenterstageAutonomousMain_TEST extends LinearOpMode {
         //telemetry.addData("Distance Sensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
         //telemetry.addData("propStartingPos: ", propStartingPos);
 
-        telemetry.addData("Alliance Color: ", SubSystemVariables.allianceColor);
-        telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
-        telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
-        telemetry.addData("Parking Position", SubSystemVariables.parkingPos);
+        telemetry.addData("Alliance Color: (change via x/b", SubSystemVariables.allianceColor);
+        telemetry.addData("Alliance Side: (change via DpadUp/DpadDown)", SubSystemVariables.allianceSide);
+        //telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
+        telemetry.addData("Parking Position (1 is corner) (change via triggers): ", SubSystemVariables.parkingPos);
+        telemetry.addData("Park? (change via bumper) ", SubSystemVariables.parkInBackstage);
         telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
         telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
         telemetry.update();
@@ -245,21 +244,27 @@ public class CenterstageAutonomousMain_TEST extends LinearOpMode {
 
     private void updateButtonPressed() {
         if(gamepad2.x) {
-            SubSystemVariables.allianceColor = BLUE;
+            SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.BLUE;
         } else if (gamepad2.b) {
             SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.RED;
         }
 
-        if(gamepad2.left_bumper) {
+        if(gamepad2.dpad_down) {
             SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.BOTTOM;
-        } else if (gamepad2.right_bumper) {
+        } else if (gamepad2.dpad_up) {
             SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.TOP;
         }
 
         if(gamepad2.left_trigger > 0.5) {
-            SubSystemVariables.parkingPos = "corner";
+            SubSystemVariables.parkingPos = 1;
         } else if (gamepad2.right_trigger > 0.5) {
-            SubSystemVariables.parkingPos = "backboard";
+            SubSystemVariables.parkingPos = 2;
+        }
+
+        if(gamepad2.left_bumper) {
+            SubSystemVariables.parkInBackstage = false;
+        } else if (gamepad2.right_bumper) {
+            SubSystemVariables.parkInBackstage = true;
         }
     }
 
@@ -312,9 +317,12 @@ public class CenterstageAutonomousMain_TEST extends LinearOpMode {
         finalizeVariables();
 
         AutonDistanceDropPixel();
-        AutonMoveToBackstage();
+        if(SubSystemVariables.parkInBackstage) {
+            AutonMoveToBackstage();
+        }
         sleep(1000);
         clawArm.setClawArmPosition(0);
+        sleep(1000);
 
     }
 
@@ -323,10 +331,12 @@ public class CenterstageAutonomousMain_TEST extends LinearOpMode {
         holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
         driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
 
-        if(SubSystemVariables.parkingPos.equals("corner")) {
+        if(SubSystemVariables.parkingPos == 1) {
             turnToHeading(TURN_SPEED, 180);
             holdHeading(TURN_SPEED, 180, 0.5);
-            driveStraight(DRIVE_SPEED, 22, 180);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
+            sleep(500);
+            driveStraight(DRIVE_SPEED, 18, 180);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
             driveStraight(DRIVE_SPEED, 12, SubSystemVariables.headingToBackboard);
@@ -370,6 +380,7 @@ public class CenterstageAutonomousMain_TEST extends LinearOpMode {
             claw.closeClaw(false);
             sleep(1000);
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            sleep(1000);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
 
@@ -401,7 +412,7 @@ public class CenterstageAutonomousMain_TEST extends LinearOpMode {
         //}
         if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 450) {
             return 1;
-        } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 400) {
+        } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 450) {
             return 3;
         } else {
             return 2;

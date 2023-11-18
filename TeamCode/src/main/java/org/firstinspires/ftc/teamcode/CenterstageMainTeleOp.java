@@ -65,7 +65,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private double joystick2RightYOffset = 0.0;
 
     private int liftpos;
-    private boolean droneLaunchState = false;
+
+    public static boolean droneLaunchState = false;
 
     public void initHardware() throws InterruptedException {
         drivetrain = new SubSystemDrivetrain(hardwareMap);
@@ -264,8 +265,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
     private void droneUpdate()
     {
-        if (droneLaunchState)
-            drone.launchDrone();
+        drone.launchDrone();
     }
 
     private void updateSubSystems()

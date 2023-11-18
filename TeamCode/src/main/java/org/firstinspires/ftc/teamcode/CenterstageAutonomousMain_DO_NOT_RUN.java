@@ -34,6 +34,7 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -41,9 +42,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
 
-import org.firstinspires.ftc.robotcore.external.SignificantMotionDetection;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -100,8 +99,8 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
  */
 
 @Autonomous
-//@Disabled
-public class CenterstageAutonomousMain extends LinearOpMode {
+@Disabled
+public class CenterstageAutonomousMain_DO_NOT_RUN extends LinearOpMode {
     private boolean isTestBot = true;
     private SubSystemClawArm clawArm = null;
     private SubSystemClaw claw = null;
@@ -346,7 +345,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         claw.closeClaw(true);
         sleep(1000);
         clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
-        clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
+        clawArm.setClawArmPosition(0);
 
     }
 
@@ -355,7 +354,6 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     }
 
     private void readyPark() {
-        2
 
     }
 

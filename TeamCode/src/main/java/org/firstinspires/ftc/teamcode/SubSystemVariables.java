@@ -12,8 +12,8 @@ public class SubSystemVariables {
     public static final int INTAKE_LIFT_POS_2 = 0;
     public static final int INTAKE_LIFT_POS_3 = 800;
 
-    public static final double CLAW_ARM_POWER = 0.3;
-    public static final int CLAW_ARM_POS_0 = 450;
+    public static final double CLAW_ARM_POWER = 0.6;
+    public static final int CLAW_ARM_POS_0 = 570;
     public static final int CLAW_ARM_POS_1 = 5;
     public static final int CLAW_ARM_POS_2 = 250;
     public static final int CLAW_ARM_POS_3 = 250;
@@ -51,4 +51,6 @@ public class SubSystemVariables {
     public static double HOPPER_POS_2 = 0.8;
     public static double HOPPER_POS_3 = 0.7;
     public static double HOPPER_POS_4 = 0.6;
+
+    public static double droneLaunchVal = 0.41;
 }
