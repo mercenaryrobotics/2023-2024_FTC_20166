@@ -29,6 +29,9 @@
 
 package org.firstinspires.ftc.teamcode;
 
+//import static org.firstinspires.ftc.teamcode.SubSystemVariables.ALLIANCE_COLOR.BLUE;
+
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -37,6 +40,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.acmerobotics.dashboard.FtcDashboard;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -95,10 +99,12 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 
 @Autonomous
 //@Disabled
-public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
+public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private boolean isTestBot = true;
     private SubSystemClawArm clawArm = null;
     private SubSystemClaw claw = null;
+    public FtcDashboard dashboard;
+
 
     /* Declare OpMode members. */
     private DcMotor frontLeftDrive = null;
@@ -119,8 +125,8 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
     private double  turnSpeed     = 0;
     private double  leftSpeed     = 0;
     private double  rightSpeed    = 0;
-    private int     leftTarget    = 0;
-    private int     rightTarget   = 0;
+    private int backTarget = 0;
+    private int frontTarget = 0;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -130,15 +136,18 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
 
     static final double     CORRECTION_FACTOR       = (60.0/58.0);
+    static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0);
     static final double     COUNTS_PER_MOTOR_REV    = 537.7 ;   // eg: GoBILDA 312 RPM Yellow Jacket
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double     COUNTS_PER_INCH_STRAFE         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR_STRAFE) /
+            (WHEEL_DIAMETER_INCHES * 3.1415);
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
-    private static final double     DRIVE_SPEED             = 0.7;     // Max driving speed for better distance accuracy.
+    static final double     DRIVE_SPEED             = 0.4;     // Max driving speed for better distance accuracy.
     static final double     TURN_SPEED              = 0.2;     // Max Turn speed to limit turn rate
     static final double     HEADING_THRESHOLD       = 1.0 ;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
@@ -181,6 +190,12 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
         backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+    }
+
+    public void initializeDashboard() {
+        dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
     }
 
     public void testProgram() {
@@ -232,13 +247,13 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
         //telemetry.addData("Distance Sensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
         //telemetry.addData("propStartingPos: ", propStartingPos);
 
-        telemetry.addData("Alliance Color: (change via x/b", SubSystemVariables.allianceColor);
-        telemetry.addData("Alliance Side: (change via DpadUp/DpadDown)", SubSystemVariables.allianceSide);
+        telemetry.addData("Alliance Color: ", SubSystemVariables.allianceColor);
+        telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
         //telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
-        telemetry.addData("Parking Position (1 is corner) (change via triggers): ", SubSystemVariables.parkingPos);
-        telemetry.addData("Park? (change via bumper) ", SubSystemVariables.parkInBackstage);
-        telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
-        telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
+        telemetry.addData("Parking Position", SubSystemVariables.parkingPos);
+        //telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
+        //telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
+        telemetry.addData("Park in backstage? ", SubSystemVariables.parkInBackstage);
         telemetry.update();
     }
 
@@ -249,21 +264,23 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
             SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.RED;
         }
 
-        if(gamepad2.dpad_down) {
+        if(gamepad2.a) {
             SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.BOTTOM;
-        } else if (gamepad2.dpad_up) {
+        } else if (gamepad2.y) {
             SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.TOP;
         }
 
-        if(gamepad2.left_trigger > 0.5) {
+        if(gamepad2.dpad_left) {
             SubSystemVariables.parkingPos = 1;
-        } else if (gamepad2.right_trigger > 0.5) {
+        } else if (gamepad2.dpad_up) {
             SubSystemVariables.parkingPos = 2;
+        } else if (gamepad2.dpad_right) {
+            SubSystemVariables.parkingPos = 3;
         }
 
-        if(gamepad2.left_bumper) {
+        if(gamepad2.dpad_left) {
             SubSystemVariables.parkInBackstage = false;
-        } else if (gamepad2.right_bumper) {
+        } else if (gamepad2.dpad_right) {
             SubSystemVariables.parkInBackstage = true;
         }
     }
@@ -278,11 +295,11 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
-            SubSystemVariables.distToBackboard = 72;
+            SubSystemVariables.distToBackboard = 86;
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-            SubSystemVariables.distToBackboard = 24;
+            SubSystemVariables.distToBackboard = 38;
         }
     }
 
@@ -307,41 +324,193 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
         configureMotors();
         claw.closeClaw(true);
         sleep(1000);
+        clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
-        imu.resetYaw();
+        initializeDashboard();
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
             updateTelemetry();
             updateButtonPressed();
         }
+
+        imu.resetYaw();
         finalizeVariables();
 
         AutonDistanceDropPixel();
         if(SubSystemVariables.parkInBackstage) {
-            AutonMoveToBackstage();
+            parkNew();
         }
+
+        claw.closeClaw(true);
         sleep(1000);
+        clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(0);
-        sleep(1000);
+
+    }
+
+    private void parkNew() {
+
+        //if blue and prop position is 3 || if red and prop position is 1
+        if(((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) && (propPosition == 3) && (SubSystemVariables.parkingPos == 2))
+        ||
+        (((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) && (propPosition == 1) && (SubSystemVariables.parkingPos == 2)))) {
+            driveStraight(DRIVE_SPEED, -SubSystemVariables.distToBackboard, -SubSystemVariables.headingToBackboard);
+            //drive backwards
+        }
+
+        //if blue and prop position is 3 || if red and prop position is 1
+        if(((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) && (propPosition == 1) && (SubSystemVariables.parkingPos == 2))
+                ||
+                (((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) && (propPosition == 3) && (SubSystemVariables.parkingPos == 2)))) {
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+            //drive forwards
+        }
+
+        if(((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 2 && SubSystemVariables.parkingPos == 2)
+        ||
+        (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 2 && SubSystemVariables.parkingPos == 2))) {
+            strafe(SubSystemVariables.STRAFE_SPEED, (SubSystemVariables.headingToBackboard/90) * 12);
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard+12, SubSystemVariables.headingToBackboard);
+        }
+
+        if((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3 && SubSystemVariables.parkingPos == 1)
+        ||
+        (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1 && SubSystemVariables.parkingPos == 1))
+        {
+            strafe(SubSystemVariables.STRAFE_SPEED, (SubSystemVariables.headingToBackboard/90) * 24);
+            driveStraight(DRIVE_SPEED, -SubSystemVariables.distToBackboard, -SubSystemVariables.headingToBackboard);
+        }
+
+        if((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 1 && SubSystemVariables.parkingPos == 1)
+        ||
+        (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 3 && SubSystemVariables.parkingPos == 1))
+        {
+            strafe(SubSystemVariables.STRAFE_SPEED, (SubSystemVariables.headingToBackboard/90) * -24);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+        }
+
+        if(((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 2 && SubSystemVariables.parkingPos == 1)
+            ||
+            (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 2 && SubSystemVariables.parkingPos == 1))) {
+            strafe(SubSystemVariables.STRAFE_SPEED, (SubSystemVariables.headingToBackboard/90) * 12);
+            driveStraight(DRIVE_SPEED, -24, 0);
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard+12, SubSystemVariables.headingToBackboard);
+        }
+    }
+
+    private void readyPark() {
 
     }
 
     private void AutonMoveToBackstage() {
-        turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-        holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-        driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
 
-        if(SubSystemVariables.parkingPos == 1) {
-            turnToHeading(TURN_SPEED, 180);
-            holdHeading(TURN_SPEED, 180, 0.5);
-            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
-            sleep(500);
-            driveStraight(DRIVE_SPEED, 18, 180);
+        if(propPosition == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+            driveStraight(DRIVE_SPEED, 5, SubSystemVariables.headingToBackboard + 180);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-            driveStraight(DRIVE_SPEED, 12, SubSystemVariables.headingToBackboard);
-        } else /* if(SubSystemVariables.parkingPos.equals("backboard"))*/ {
-            driveStraight(DRIVE_SPEED, 10, SubSystemVariables.headingToBackboard);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+            if(SubSystemVariables.parkingPos == 2) {
+                driveStraight(DRIVE_SPEED, 10, SubSystemVariables.headingToBackboard);
+            } else {
+                if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                } else {
+                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                }
+                turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+                holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+                driveStraight(DRIVE_SPEED, 12 ,SubSystemVariables.headingToBackboard);
+            }
+        }
+
+        if(propPosition == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+            strafe(SubSystemVariables.STRAFE_SPEED, -15);
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            if(SubSystemVariables.parkingPos == 2) {
+                driveStraight(DRIVE_SPEED, 16, SubSystemVariables.headingToBackboard);
+            } else {
+                strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                } else {
+                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                }
+            }
+
+        }
+
+        if(propPosition == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+            if(SubSystemVariables.parkingPos == 2) {
+                driveStraight(DRIVE_SPEED, 10, SubSystemVariables.headingToBackboard);
+            } else {
+                if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                } else {
+                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                }
+                turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+                holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+                driveStraight(DRIVE_SPEED, 12 ,SubSystemVariables.headingToBackboard);
+            }
+        }
+
+        if(propPosition == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            driveStraight(DRIVE_SPEED, 5, SubSystemVariables.headingToBackboard + 180);
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+            if(SubSystemVariables.parkingPos == 2) {
+                driveStraight(DRIVE_SPEED, 10, SubSystemVariables.headingToBackboard);
+            } else {
+                if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                } else {
+                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                }
+                turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+                holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+                driveStraight(DRIVE_SPEED, 12 ,SubSystemVariables.headingToBackboard);
+            }
+        }
+
+        if(propPosition == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            strafe(SubSystemVariables.STRAFE_SPEED, 15);
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+            if(SubSystemVariables.parkingPos == 2) {
+                driveStraight(DRIVE_SPEED, 15, SubSystemVariables.headingToBackboard);
+            } else {
+                strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                driveStraight(DRIVE_SPEED, 15, SubSystemVariables.headingToBackboard);
+            }
+
+        }
+
+        if(propPosition == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+            if(SubSystemVariables.parkingPos == 2) {
+                driveStraight(DRIVE_SPEED, 10, SubSystemVariables.headingToBackboard);
+            } else {
+                if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                } else {
+                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                }
+                turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
+                holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+                driveStraight(DRIVE_SPEED, 12 ,SubSystemVariables.headingToBackboard);
+            }
         }
 
     }
@@ -364,10 +533,8 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
             sleep(1000);
             claw.closeClaw(false);
             sleep(500);
-            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
             sleep(1000);
-            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
 
         } else if (position == 2) {
             driveStraight(DRIVE_SPEED, distanceDropPos2 - SCANNING_DISTANCE, 0);
@@ -379,10 +546,7 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
             sleep(1000);
             claw.closeClaw(false);
             sleep(1000);
-            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
-            sleep(1000);
-            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
 
         } else /*if (position == 3) */ {
             driveStraight(DRIVE_SPEED, 29 - (SCANNING_DISTANCE + 3), 0);
@@ -396,10 +560,8 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
             sleep(1000);
             claw.closeClaw(false);
             sleep(500);
-            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
             sleep(1000);
-            turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
-            holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
         }
     }
 
@@ -412,7 +574,7 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
         //}
         if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 450) {
             return 1;
-        } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 450) {
+        } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 400) {
             return 3;
         } else {
             return 2;
@@ -492,54 +654,101 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
                               double heading) {
 
         // Ensure that the OpMode is still active
-        if (opModeIsActive()) {
 
-            // Determine new target position, and pass to motor controller
-            int moveCounts = (int)(distance * COUNTS_PER_INCH);
-            leftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
-            rightTarget = frontRightDrive.getCurrentPosition() + moveCounts;
+        // Determine new target position, and pass to motor controller
+        int moveCounts = (int) (distance * COUNTS_PER_INCH);
+        backTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
+        frontTarget = frontRightDrive.getCurrentPosition() + moveCounts;
 
-            // Set Target FIRST, then turn on RUN_TO_POSITION
-            frontLeftDrive.setTargetPosition(leftTarget);
-            backLeftDrive.setTargetPosition(leftTarget);
-            frontRightDrive.setTargetPosition(rightTarget);
-            backRightDrive.setTargetPosition(rightTarget);
+        // Set Target FIRST, then turn on RUN_TO_POSITION
+        frontLeftDrive.setTargetPosition(backTarget);
+        backLeftDrive.setTargetPosition(backTarget);
+        frontRightDrive.setTargetPosition(frontTarget);
+        backRightDrive.setTargetPosition(frontTarget);
 
-            frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            // Set the required driving speed  (must be positive for RUN_TO_POSITION)
-            // Start driving straight, and then enter the control loop
-            maxDriveSpeed = Math.abs(maxDriveSpeed);
-            moveRobot(maxDriveSpeed, 0);
+        // Set the required driving speed  (must be positive for RUN_TO_POSITION)
+        // Start driving straight, and then enter the control loop
+        maxDriveSpeed = Math.abs(maxDriveSpeed);
+        moveRobot(maxDriveSpeed, 0);
 
-            // keep looping while we are still active, and BOTH motors are running.
-            while (opModeIsActive() &&
-                    (frontLeftDrive.isBusy() && frontRightDrive.isBusy())) {
+        // keep looping while we are still active, and BOTH motors are running.
+        while (/*opModeIsActive() &&*/
+                (frontLeftDrive.isBusy() && frontRightDrive.isBusy())) {
 
-                // Determine required steering to keep on heading
-                turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
+            // Determine required steering to keep on heading
+            turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
 
-                // if driving in reverse, the motor correction also needs to be reversed
-                if (distance < 0)
-                    turnSpeed *= -1.0;
+            // if driving in reverse, the motor correction also needs to be reversed
+            if (distance < 0)
+                turnSpeed *= -1.0;
 
-                // Apply the turning correction to the current driving speed.
-                moveRobot(driveSpeed, turnSpeed);
+            // Apply the turning correction to the current driving speed.
+            moveRobot(driveSpeed, turnSpeed);
 
-                // Display drive status for the driver.
-                sendTelemetry(true);
-            }
-
-            // Stop all motion & Turn off RUN_TO_POSITION
-            moveRobot(0, 0);
-            frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            // Display drive status for the driver.
+            sendTelemetry(true);
         }
+
+        // Stop all motion & Turn off RUN_TO_POSITION
+        moveRobot(0, 0);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    private void strafe (double maxDriveSpeed, double distance) {
+        // Ensure that the OpMode is still active
+        // Determine new target position, and pass to motor controller
+        int moveCounts = (int)(distance * COUNTS_PER_INCH_STRAFE);
+        backTarget = backLeftDrive.getCurrentPosition() + moveCounts;
+        frontTarget = frontLeftDrive.getCurrentPosition() - moveCounts;
+
+        // Set Target FIRST, then turn on RUN_TO_POSITION
+        frontLeftDrive.setTargetPosition(frontTarget);
+        backLeftDrive.setTargetPosition(backTarget);
+        frontRightDrive.setTargetPosition(backTarget);
+        backRightDrive.setTargetPosition(frontTarget);
+
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Set the required driving speed  (must be positive for RUN_TO_POSITION)
+        // Start driving straight, and then enter the control loop
+        maxDriveSpeed = Math.abs(maxDriveSpeed);
+        moveRobot(maxDriveSpeed, 0);
+
+        // keep looping while we are still active, and BOTH motors are running.
+        while (/*opModeIsActive() &&
+                (frontLeftDrive.isBusy() &&*/ frontRightDrive.isBusy()) {
+
+            // Determine required steering to keep on heading
+            turnSpeed = 0; //getSteeringCorrection(heading, P_DRIVE_GAIN);
+
+            // if driving in reverse, the motor correction also needs to be reversed
+            if (distance < 0)
+                turnSpeed *= -1.0;
+
+            // Apply the turning correction to the current driving speed.
+            moveRobot(driveSpeed, turnSpeed);
+
+            // Display drive status for the driver.
+            sendTelemetry(true);
+        }
+
+        // Stop all motion & Turn off RUN_TO_POSITION
+        moveRobot(0, 0);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     /**
@@ -677,7 +886,7 @@ public class CenterstageAutonomousMain_RUN_THIS_PROGRAM extends LinearOpMode {
         telemetry.addData("Gyro val: ", imu.getRobotYawPitchRollAngles());
         if (straight) {
             telemetry.addData("Motion", "Drive Straight");
-            telemetry.addData("Target Pos L:R",  "%7d:%7d",      leftTarget,  rightTarget);
+            telemetry.addData("Target Pos L:R",  "%7d:%7d", backTarget, frontTarget);
             telemetry.addData("Actual Pos L:R",  "%7d:%7d",      frontLeftDrive.getCurrentPosition(),
                     frontRightDrive.getCurrentPosition());
         } else {
