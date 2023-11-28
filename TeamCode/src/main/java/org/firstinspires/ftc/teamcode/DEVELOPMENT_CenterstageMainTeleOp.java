@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDroneLaunch;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopper;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopperIntakeLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopperLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
@@ -46,6 +47,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private SubSystemClawArm clawArm = null;
     private SubSystemHopper hopper = null;
     private SubSystemHopperLift hopperLift = null;
+    private SubSystemHopperIntakeLift hopperIntakeLift = null;
 
     private double joystickTranslateX = 0.0;
     private double joystickTranslateY = 0.0;
@@ -67,14 +69,15 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private boolean droneLaunchState = false;
 
     public void initHardware() throws InterruptedException {
-        drivetrain = new SubSystemDrivetrain(hardwareMap);
-        intakeLift = new SubSystemIntakeLift(hardwareMap);
-        hangLift   = new SubSystemHangLift(hardwareMap);
-        clawArm    = new SubSystemClawArm(hardwareMap);
-        claw       = new SubSystemClaw(hardwareMap);
-        hopper     = new SubSystemHopper(hardwareMap);
-        drone      = new SubSystemDroneLaunch(hardwareMap);
-        hopperLift = new SubSystemHopperLift(hardwareMap);
+        drivetrain       = new       SubSystemDrivetrain(hardwareMap);
+        intakeLift       = new       SubSystemIntakeLift(hardwareMap);
+        hangLift         = new         SubSystemHangLift(hardwareMap);
+        clawArm          = new          SubSystemClawArm(hardwareMap);
+        claw             = new             SubSystemClaw(hardwareMap);
+        hopper           = new           SubSystemHopper(hardwareMap);
+        drone            = new      SubSystemDroneLaunch(hardwareMap);
+        hopperLift       = new       SubSystemHopperLift(hardwareMap);
+        hopperIntakeLift = new SubSystemHopperIntakeLift(hardwareMap);
 
         gamepadsReset();
     }
@@ -133,7 +136,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         joystickTranslateY = gamepad1.left_stick_y - joystick1LeftYOffset;
         joystickRotate     = gamepad1.right_stick_x - joystick1RightXOffset;
 
-
+        /*
         if (gamepad1.y && hangRelease) {
             hangLiftHang = true;
         } else {
@@ -146,7 +149,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
             hangLiftDrop = false;
         }
 
-        /*
+
         if(gamepad2.dpad_down) {
             intakeLiftPosition = 1;
         }
@@ -182,44 +185,32 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         lastTogglePressed = togglePressed;
          */
 
-        if (gamepad1.b && gamepad1.dpad_right)
-            hangRelease = true;
-
-        if(gamepad2.b && gamepad2.left_stick_button) {
-            droneLaunchState = true;
+        if(gamepad2.y) {
+            hopperIntakeLift.setHopperIntakeLiftPower(-.5);
+            telemetry.addLine("HopperLift is running now");
+            telemetry.update();
+        } else {
+            hopperIntakeLift.setHopperIntakeLiftPower(0);
+            telemetry.addLine("HopperLift is not running now");
+            telemetry.update();
         }
 
-        if(gamepad2.dpad_up) {
-            hopperState = "up";
-        }
-
-        if(gamepad2.dpad_down) {
-            hopperState = "down";
-        }
-
-        if(gamepad1.left_trigger > 0.5) {
-            hopperOpen = false;
-        }
-
-        if(gamepad1.right_trigger > 0.5 ) {
-            hopperOpen = true;
+        if(hopperLift.getLiftEncoders() < SubSystemVariables.HOPPER_LIFT_POS_MIN && hopperLift.getLiftEncoders() > SubSystemVariables.HOPPER_LIFT_POS_MAX) {
+            hopperLift.setHopperLiftPower(gamepad2.left_trigger - gamepad2.right_trigger);
         }
 
         if(gamepad2.a) {
-            hopperLiftPosition = 1;
+            hopper.openGate(true);
+        } else {
+            hopper.openGate(false);
         }
 
-        if(gamepad2.x) {
-            hopperLiftPosition = 2;
+        if(gamepad2.dpad_up) {
+            hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_3);
+        } else {
+            hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_1);
         }
 
-        if(gamepad2.y) {
-            hopperLiftPosition = 3;
-        }
-
-        if(gamepad2.b) {
-            hopperLiftPosition = 4;
-        }
 
         /*
         if(gamepad1.left_trigger > 0.1) { // -3200 is max
@@ -231,7 +222,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         }
         */
 
-        driveModeChangeButton = gamepad1.x;
+        //driveModeChangeButton = gamepad1.x;
     }
 
     private void hopperUpdate() {
@@ -338,7 +329,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
 
     private void updateSubSystems() {
         //Update the intake
-        intakeLiftUpdate();
+        //intakeLiftUpdate();
         //Update the hang lift
         hangLiftUpdate();
         //Update the drone launch
@@ -348,7 +339,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         //Updates the hopper gate and hopper position
         hopperUpdate();
         //Updates the hopper lift position
-        hopperLiftUpdate();
+        //hopperLiftUpdate();
     }
 
     private void doTeleop()

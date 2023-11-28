@@ -47,6 +47,9 @@ public class SubSystemVariables {
     public static int HOPPER_LIFT_POS_3 = -2500;
     public static int HOPPER_LIFT_POS_4 = -3000;
 
+    public static int HOPPER_LIFT_POS_MAX = -3200;
+    public static int HOPPER_LIFT_POS_MIN = -10;
+
     public static double HOPPER_POS_1 = 1;
     public static double HOPPER_POS_2 = 0.8;
     public static double HOPPER_POS_3 = 0.7;

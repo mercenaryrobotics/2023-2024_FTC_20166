@@ -696,8 +696,8 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     public void driveStraight(double maxDriveSpeed,
                               double distance) {
 
+        double heading = getHeading();
         // Ensure that the OpMode is still active
-
         // Determine new target position, and pass to motor controller
         int moveCounts = (int) (distance * COUNTS_PER_INCH);
         backTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
@@ -724,11 +724,9 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
                 (frontLeftDrive.isBusy() && frontRightDrive.isBusy())) {
 
             // Determine required steering to keep on heading
-            //turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
+            turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
 
             // if driving in reverse, the motor correction also needs to be reversed
-
-            turnSpeed = 0;
 
             // Apply the turning correction to the current driving speed.
             moveRobot(driveSpeed, turnSpeed);
@@ -747,6 +745,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
 
     private void strafe (double maxDriveSpeed, double distance) {
         // Ensure that the OpMode is still active
+        double heading = getHeading();
         // Determine new target position, and pass to motor controller
         int moveCounts = (int)(distance * COUNTS_PER_INCH_STRAFE);
         backTarget = backLeftDrive.getCurrentPosition() + moveCounts;
@@ -773,7 +772,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
                 (frontLeftDrive.isBusy() &&*/ frontRightDrive.isBusy()) {
 
             // Determine required steering to keep on heading
-            turnSpeed = 0; //getSteeringCorrection(heading, P_DRIVE_GAIN);
+            turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
 
             // if driving in reverse, the motor correction also needs to be reversed
             if (distance < 0)
