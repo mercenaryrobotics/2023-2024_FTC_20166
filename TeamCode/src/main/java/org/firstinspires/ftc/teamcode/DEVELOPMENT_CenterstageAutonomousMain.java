@@ -160,8 +160,8 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
     static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable
     static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable4
-    static int              MIRROR;
-    private int propPosition;
+    static int Mirror;
+    private int PixelPos;
 
     private final double distanceDropPos1 = 29.0;
     private final double finishDistancePos1 = 2.0;
@@ -177,6 +177,15 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private int ParkStrafeMultiplier;
     private int TINY_DISTANCE = 0;
     private int DistanceMoved;
+    private int ForwardBackward;
+    private int PixelPositionMultiplier;
+    private int PixelCenter;
+    private int SkipAdjust;
+    private double CorrectionDistance;
+    private final double DROP_POS_CENTER = 25;
+    private final double PUSH_OFF_DISTANCE_CENTER = 8;
+    private final double DROP_POS_SIDE = 29;
+    private final double PUSH_OFF_DISTANCE_SIDE = 4;
 
     public void initializeMotors() throws InterruptedException {
         // Initialize the drive system variables.
@@ -287,9 +296,9 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             SubSystemVariables.parkingPos = 3;
         }
 
-        if(gamepad2.dpad_left) {
+        if(gamepad2.left_bumper) {
             SubSystemVariables.parkInBackstage = false;
-        } else if (gamepad2.dpad_right) {
+        } else if (gamepad2.right_bumper) {
             SubSystemVariables.parkInBackstage = true;
         }
     }
@@ -297,13 +306,13 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private void finalizeVariables() {
         if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
             SubSystemVariables.headingToBackboard = 90;
-            MIRROR = -1;
+            Mirror = -1;
         } else {
             SubSystemVariables.headingToBackboard = -90;
-            MIRROR = 1;
+            Mirror = 1;
         }
 
-        if((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1)) {
+        if((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && PixelPos == 3) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && PixelPos == 1)) {
             InvertStrafe = -1;
         } else {
             InvertStrafe = 1;
@@ -311,12 +320,12 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
-            SubSystemVariables.distToBackboard = 86;
+            SubSystemVariables.distToBackboard = SubSystemVariables.AUTON_BOTTOM_BACKBOARD_DISTANCE;
             TopBottomMultiplier = -1;
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-            SubSystemVariables.distToBackboard = 38;
+            SubSystemVariables.distToBackboard = SubSystemVariables.AUTON_TOP_BACKBOARD_DISTANCE;
             TopBottomMultiplier = 1;
         }
 
@@ -327,6 +336,27 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         } else /* if (SubSystemVariables.parkingPos == 3) */{
             ParkStrafeMultiplier = 1;
         }
+
+        if(PixelPos == 1) {
+            ForwardBackward = 1;
+        } else {
+            ForwardBackward = -1;
+        }
+
+        if (PixelPos == 1) {
+            PixelPositionMultiplier = -1;
+            PixelCenter = 0;
+        } else if (PixelPos == 2) {
+            PixelPositionMultiplier = 0;
+            PixelCenter = 1;
+        } else {
+            PixelPositionMultiplier = 1;
+            PixelCenter = 0;
+        }
+
+        SkipAdjust = Mirror * ParkStrafeMultiplier * PixelPositionMultiplier;
+
+        CorrectionDistance =  -(PIXEL_DROP_ADJUST_DISTANCE + (ForwardBackward * PIXEL_DROP_ALIGN_DISTANCE));
     }
 
     @Override
@@ -360,10 +390,6 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
 
         imu.resetYaw();
-        propPosition = 1;
-        finalizeVariables();
-        strafe(SubSystemVariables.STRAFE_SPEED, TopBottomMultiplier * (PIXEL_DROP_ALIGN_DISTANCE + TINY_DISTANCE - 1));
-        /*
         AutonDistanceDropPixel();
         finalizeVariables();
         if(SubSystemVariables.parkInBackstage) {
@@ -374,26 +400,30 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         sleep(1000);
         clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(0);
-         */
     }
 
     private void parkNew() {
 
-        if(propPosition == 2) {
-            driveStraight(DRIVE_SPEED, TINY_DISTANCE);
-            DistanceMoved = -TINY_DISTANCE;
-            strafe(SubSystemVariables.STRAFE_SPEED, -TopBottomMultiplier * TINY_DISTANCE);
-            turnToHeading(TURN_SPEED, MIRROR * 90);
-            holdHeading(TURN_SPEED, MIRROR * 90, 0.5);
-            strafe(SubSystemVariables.STRAFE_SPEED, TopBottomMultiplier * (PIXEL_DROP_ALIGN_DISTANCE + TINY_DISTANCE - 1));
-        } else {
-            driveStraight(DRIVE_SPEED, TopBottomMultiplier * InvertStrafe * TINY_DISTANCE);
-            DistanceMoved = 0;
-        }
-
-        strafe(SubSystemVariables.STRAFE_SPEED, InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH);
-        sleep(300);
+        Strafe(DRIVE_SPEED, (InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH) + (InvertStrafe * ParkStrafeMultiplier * CorrectionDistance));
+        sleep(100);
         driveStraight(DRIVE_SPEED, InvertStrafe * SubSystemVariables.distToBackboard);
+
+//
+//        if(propPosition == 2) {
+//            driveStraight(DRIVE_SPEED, TINY_DISTANCE);
+//            DistanceMoved = -TINY_DISTANCE;
+//            strafe(SubSystemVariables.STRAFE_SPEED, -TopBottomMultiplier * TINY_DISTANCE);
+//            turnToHeading(TURN_SPEED, MIRROR * 90);
+//            holdHeading(TURN_SPEED, MIRROR * 90, 0.5);
+//            strafe(SubSystemVariables.STRAFE_SPEED, TopBottomMultiplier * (PIXEL_DROP_ALIGN_DISTANCE + TINY_DISTANCE - 1));
+//        } else {
+//            driveStraight(DRIVE_SPEED, TopBottomMultiplier * InvertStrafe * TINY_DISTANCE);
+//            DistanceMoved = 0;
+//        }
+//
+//        strafe(SubSystemVariables.STRAFE_SPEED, InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH);
+//        sleep(300);
+//        driveStraight(DRIVE_SPEED, InvertStrafe * SubSystemVariables.distToBackboard);
 
         /*
         //if blue and prop position is 3 || if red and prop position is 1
@@ -455,7 +485,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
 
     private void AutonMoveToBackstage() {
 
-        if(propPosition == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+        if(PixelPos == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
             driveStraight(DRIVE_SPEED, 5);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
@@ -464,9 +494,9 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
                 driveStraight(DRIVE_SPEED, 10);
             } else {
                 if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, -12);
                 } else {
-                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, 12);
                 }
                 turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
                 holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
@@ -474,24 +504,24 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             }
         }
 
-        if(propPosition == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-            strafe(SubSystemVariables.STRAFE_SPEED, -15);
+        if(PixelPos == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+            Strafe(SubSystemVariables.STRAFE_SPEED, -15);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
             if(SubSystemVariables.parkingPos == 2) {
                 driveStraight(DRIVE_SPEED, 16);
             } else {
-                strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                Strafe(SubSystemVariables.STRAFE_SPEED, -12);
                 if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, -12);
                 } else {
-                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, 12);
                 }
             }
 
         }
 
-        if(propPosition == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+        if(PixelPos == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
             driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard);
@@ -499,9 +529,9 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
                 driveStraight(DRIVE_SPEED, 10);
             } else {
                 if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, -12);
                 } else {
-                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, 12);
                 }
                 turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
                 holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
@@ -509,7 +539,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             }
         }
 
-        if(propPosition == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+        if(PixelPos == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
             driveStraight(DRIVE_SPEED, 5);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
@@ -518,9 +548,9 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
                 driveStraight(DRIVE_SPEED, 10);
             } else {
                 if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, -12);
                 } else {
-                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, 12);
                 }
                 turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
                 holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
@@ -528,21 +558,21 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             }
         }
 
-        if(propPosition == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
-            strafe(SubSystemVariables.STRAFE_SPEED, 15);
+        if(PixelPos == 2 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            Strafe(SubSystemVariables.STRAFE_SPEED, 15);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
             driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard);
             if(SubSystemVariables.parkingPos == 2) {
                 driveStraight(DRIVE_SPEED, 15);
             } else {
-                strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                Strafe(SubSystemVariables.STRAFE_SPEED, 12);
                 driveStraight(DRIVE_SPEED, 15);
             }
 
         }
 
-        if(propPosition == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+        if(PixelPos == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
             driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard);
@@ -550,9 +580,9 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
                 driveStraight(DRIVE_SPEED, 10);
             } else {
                 if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-                    strafe(SubSystemVariables.STRAFE_SPEED, -12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, -12);
                 } else {
-                    strafe(SubSystemVariables.STRAFE_SPEED, 12);
+                    Strafe(SubSystemVariables.STRAFE_SPEED, 12);
                 }
                 turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
                 holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
@@ -563,11 +593,47 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     }
     private void AutonDistanceDropPixel() {
         driveStraight(DRIVE_SPEED, SCANNING_DISTANCE);
-        propPosition = detectPropDistance();
-        processPropPosition(propPosition);
+        PixelPos = detectPropDistance();
+        processPropPosition(PixelPos);
     }
 
     private void processPropPosition(int position) {
+
+        if(position == 2) {
+            driveStraight(DRIVE_SPEED, DROP_POS_CENTER - SCANNING_DISTANCE);
+            driveStraight(DRIVE_SPEED + 0.3, PUSH_OFF_DISTANCE_CENTER);
+            sleep(100);
+            driveStraight(DRIVE_SPEED, -PUSH_OFF_DISTANCE_CENTER);
+            sleep(500);
+            clawArm.setClawArmPosition(0);
+            sleep(500);
+            claw.closeClaw(false);
+            sleep(500);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            sleep(500);
+            turnToHeading(TURN_SPEED, Mirror * 90);
+            holdHeading(TURN_SPEED, Mirror * 90, 0.5);
+        } else {
+            driveStraight(DRIVE_SPEED, DROP_POS_SIDE - SCANNING_DISTANCE + (ForwardBackward * PIXEL_DROP_ADJUST_DISTANCE));
+            turnToHeading(TURN_SPEED, (ForwardBackward * 90));
+            holdHeading(TURN_SPEED, (ForwardBackward * 90), 0.5);
+            driveStraight(DRIVE_SPEED + 0.3, PUSH_OFF_DISTANCE_SIDE);
+            sleep(100);
+            driveStraight(DRIVE_SPEED, -PUSH_OFF_DISTANCE_SIDE);
+            sleep(500);
+            clawArm.setClawArmPosition(0);
+            sleep(500);
+            claw.closeClaw(false);
+            sleep(500);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            sleep(500);
+            if (SkipAdjust != -1) {
+                Strafe(DRIVE_SPEED, CorrectionDistance);
+                CorrectionDistance = 0; //Don't do the correction later
+            }
+        }
+
+        /*
         if(position == 1) {
             driveStraight(DRIVE_SPEED, 29 - (SCANNING_DISTANCE + 1));
             turnToHeading(TURN_SPEED, 90);
@@ -595,7 +661,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             sleep(1000);
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
 
-        } else /*if (position == 3) */ {
+        } else /*if (position == 3) */ /* {
             driveStraight(DRIVE_SPEED, 29 - (SCANNING_DISTANCE + 3));
             turnToHeading(TURN_SPEED, -90);
             holdHeading(TURN_SPEED, -90, 0.5);
@@ -610,15 +676,12 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
             sleep(1000);
         }
+        */
+
     }
 
     private int detectPropDistance() {
         sleep(500);
-        //while(opModeIsActive()) {
-        //telemetry.addData("Left Distance: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
-        //telemetry.addData("Right Distance: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
-        //telemetry.update();
-        //}
         if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 450) {
             return 1;
         } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 400) {
@@ -743,7 +806,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    private void strafe (double maxDriveSpeed, double distance) {
+    private void Strafe(double maxDriveSpeed, double distance) {
         // Ensure that the OpMode is still active
         double heading = getHeading();
         // Determine new target position, and pass to motor controller

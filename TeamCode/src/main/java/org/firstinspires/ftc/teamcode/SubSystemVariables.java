@@ -36,7 +36,7 @@ public class SubSystemVariables {
     public static ALLIANCE_COLOR allianceColor = ALLIANCE_COLOR.BLUE;
     public static ALLIANCE_SIDE allianceSide = ALLIANCE_SIDE.BOTTOM;
     public static int parkingPos = 1;
-    public static boolean parkInBackstage = true;
+    public static boolean parkInBackstage = false;
 
     public static double HOPPER_GATE_OPEN = 0.8;
     public static double HOPPER_GATE_CLOSE = 1;
@@ -56,6 +56,9 @@ public class SubSystemVariables {
     public static double HOPPER_POS_4 = 0.6;
     public static double HOPPER_POS_UP = 1.0;
     public static double HOPPER_POS_DOWN = 0.7;
+
+    public static int AUTON_TOP_BACKBOARD_DISTANCE = 38;
+    public static int AUTON_BOTTOM_BACKBOARD_DISTANCE = 86;
 
     public static double droneLaunchVal = 0.41;
 }
