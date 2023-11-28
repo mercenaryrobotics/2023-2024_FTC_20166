@@ -10,6 +10,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -17,10 +18,13 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 //import org.opencv.core.Mat;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
@@ -35,15 +39,18 @@ public class SubSystemDrivetrain {
     private DcMotorEx backLeftDrive;
     private DcMotorEx backRightDrive;
     public FtcDashboard dashboard;
-
+    private DistanceSensor frontDistanceSensor;
     private IMU imu;
-    private double ZeroAngleOffset  = 0.0;
+    private double ZeroAngleOffsetRads  = 0.0;
+    private double ZeroAngleOffsetDegs  = 0.0;
     private double speedDeadband = 0.05;
     public static double FLP = 0.0;
     public static double FRP = 0.0;
     public static double BLP = 0.0;
     public static double BRP = 0.0;
     private final double sqrt2   = Math.sqrt(2);
+    static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable
+    static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable4
 
     public SubSystemDrivetrain(HardwareMap hardwareMap) throws InterruptedException {                 // Motor Mapping
         // Initialize the motor hardware variables. Note that the strings used here as parameters
@@ -68,6 +75,9 @@ public class SubSystemDrivetrain {
 
         resetEncoders();
 
+        //Front distance sensor
+        frontDistanceSensor = hardwareMap.get(DistanceSensor.class, "frontDistanceSensor");
+
         //IMU
         imu = hardwareMap.get(IMU.class, "imu");
 
@@ -75,14 +85,14 @@ public class SubSystemDrivetrain {
             IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                     RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
                     RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
-            )
+                )
             );
         }
         else {
             IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                     RevHubOrientationOnRobot.LogoFacingDirection.UP,
                     RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
-            )
+                )
             );
         }
     }
@@ -115,9 +125,12 @@ public class SubSystemDrivetrain {
         return result;
     }
 
-    public double getCurrentHeading(){
+    public double getCurrentHeading(boolean resultInRads){
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        return loopInRange(orientation.getYaw(AngleUnit.RADIANS) - ZeroAngleOffset, Math.PI);
+        if (resultInRads)
+            return loopInRange(orientation.getYaw(AngleUnit.RADIANS) - ZeroAngleOffsetRads, Math.PI);
+        else
+            return loopInRange(orientation.getYaw(AngleUnit.DEGREES) - ZeroAngleOffsetDegs, 180);
     }
 
     public double loopInRange(double value, double range)
@@ -132,7 +145,7 @@ public class SubSystemDrivetrain {
         setMotors(0, 0, 0, 0);
     }
 
-    private void setMotors(double FL, double FR, double BL, double BR){
+    public void setMotors(double FL, double FR, double BL, double BR){
         double max;
         //If any value is greater than 1.0 normalize all values accordingly
         max = Math.max(Math.max(FL,FR),Math.max(BL,BR));
@@ -208,7 +221,7 @@ public class SubSystemDrivetrain {
             finalSpeed = translateSpeed;
         }
         if (fieldCentric) {
-            currentHeading = getCurrentHeading();
+            currentHeading = getCurrentHeading(true);
         }
         botCentricDirection = currentHeading - heading;
 
@@ -233,6 +246,52 @@ public class SubSystemDrivetrain {
     public void setSpeedDeadband(double deadband)
     {
         speedDeadband = deadband;
+    }
+
+    public void turnHeading(double maxTurnSpeed, double heading) {
+        double turnSpeed;
+        // Determine required steering to keep on heading
+        turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+
+        // Clip the speed to the maximum permitted value.
+        turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);
+
+        // Pivot in place by applying the turning correction
+        moveRobot(0, turnSpeed);
+    }
+
+    public void driveHeading(double speed, double maxTurnSpeed, double heading) {
+        double turnSpeed;
+        // Determine required steering to keep on heading
+        turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+        // Clip the speed to the maximum permitted value.
+        turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);
+        moveRobot(speed, turnSpeed);
+
+    }
+
+    public double getSteeringCorrection(double desiredHeading, double proportionalGain) {
+        double targetHeading;
+        double headingError;
+
+        targetHeading = desiredHeading;  // Save for telemetry
+
+        // Determine the heading current error
+        headingError = targetHeading - getCurrentHeading(false);//In degrees
+
+        // Multiply the error by the gain to determine the required steering correction/  Limit the result to +/- 1.0
+        return Range.clip(headingError * proportionalGain, -1, 1);
+    }
+
+    public void moveRobot(double drive, double turn) {
+        double leftSpeed  = drive - turn;
+        double rightSpeed = drive + turn;
+
+        setMotors(leftSpeed, rightSpeed, leftSpeed, rightSpeed);
+    }
+
+    public double getFrontDistanceSensor(){
+        return frontDistanceSensor.getDistance(DistanceUnit.MM);
     }
 
 }

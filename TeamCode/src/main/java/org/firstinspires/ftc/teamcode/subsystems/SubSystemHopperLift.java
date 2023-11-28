@@ -29,7 +29,7 @@ public class SubSystemHopperLift {
         hopperLift.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
     }
 
-    public int getLiftEncoders(){
+    public int getLiftPosition(){
         return hopperLift.getCurrentPosition();
     }
 
