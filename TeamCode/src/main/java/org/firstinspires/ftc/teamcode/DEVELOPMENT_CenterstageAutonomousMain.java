@@ -128,8 +128,8 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private double  turnSpeed     = 0;
     private double  leftSpeed     = 0;
     private double  rightSpeed    = 0;
-    private int backTarget = 0;
-    private int frontTarget = 0;
+    private int backLeftTarget = 0;
+    private int frontLeftTarget = 0;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -186,6 +186,8 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private final double PUSH_OFF_DISTANCE_CENTER = 8;
     private final double DROP_POS_SIDE = 29;
     private final double PUSH_OFF_DISTANCE_SIDE = 4;
+    private int frontRightTarget;
+    private int backRightTarget;
 
     public void initializeMotors() throws InterruptedException {
         // Initialize the drive system variables.
@@ -303,7 +305,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
     }
 
-    private void finalizeVariables() {
+    private void InitParameters() {
         if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
             SubSystemVariables.headingToBackboard = 90;
             Mirror = -1;
@@ -312,19 +314,12 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             Mirror = 1;
         }
 
-        if((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && PixelPos == 3) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && PixelPos == 1)) {
-            InvertStrafe = -1;
-        } else {
-            InvertStrafe = 1;
 
-        }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
             SubSystemVariables.distToBackboard = SubSystemVariables.AUTON_BOTTOM_BACKBOARD_DISTANCE;
             TopBottomMultiplier = -1;
-        }
-
-        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
+        } else if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
             SubSystemVariables.distToBackboard = SubSystemVariables.AUTON_TOP_BACKBOARD_DISTANCE;
             TopBottomMultiplier = 1;
         }
@@ -336,6 +331,16 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         } else /* if (SubSystemVariables.parkingPos == 3) */{
             ParkStrafeMultiplier = 1;
         }
+
+    }
+
+    private void UpdateParameters() {
+        if((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && PixelPos == 3) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && PixelPos == 1)) {
+            InvertStrafe = -1;
+        } else {
+            InvertStrafe = 1;
+        }
+
 
         if(PixelPos == 1) {
             ForwardBackward = 1;
@@ -390,8 +395,8 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
 
         imu.resetYaw();
+        InitParameters();
         AutonDistanceDropPixel();
-        finalizeVariables();
         if(SubSystemVariables.parkInBackstage) {
             parkNew();
         }
@@ -400,11 +405,13 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         sleep(1000);
         clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(0);
+
+        //Strafe(SubSystemVariables.STRAFE_SPEED, 15);
     }
 
     private void parkNew() {
 
-        Strafe(DRIVE_SPEED, (InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH) + (InvertStrafe * ParkStrafeMultiplier * CorrectionDistance));
+        Strafe(SubSystemVariables.STRAFE_SPEED, (InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH) + (InvertStrafe * ParkStrafeMultiplier * CorrectionDistance));
         sleep(100);
         driveStraight(DRIVE_SPEED, InvertStrafe * SubSystemVariables.distToBackboard);
 
@@ -477,10 +484,6 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard+12, SubSystemVariables.headingToBackboard);
         }
          */
-    }
-
-    private void readyPark() {
-
     }
 
     private void AutonMoveToBackstage() {
@@ -594,6 +597,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private void AutonDistanceDropPixel() {
         driveStraight(DRIVE_SPEED, SCANNING_DISTANCE);
         PixelPos = detectPropDistance();
+        UpdateParameters();
         processPropPosition(PixelPos);
     }
 
@@ -640,7 +644,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             holdHeading(TURN_SPEED, 90, 0.5);
             driveStraight(DRIVE_SPEED + 0.3, 8);
             sleep(500);
-            driveStraight(DRIVE_SPEED, -10);
+            driveStraight(DRIVE_SPEED, -8);
             sleep(500);
             clawArm.setClawArmPosition(0);
             sleep(1000);
@@ -661,13 +665,13 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             sleep(1000);
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
 
-        } else /*if (position == 3) */ /* {
+        } else if (position == 3)  {
             driveStraight(DRIVE_SPEED, 29 - (SCANNING_DISTANCE + 3));
             turnToHeading(TURN_SPEED, -90);
             holdHeading(TURN_SPEED, -90, 0.5);
             driveStraight(DRIVE_SPEED + 0.3, 8);
             sleep(500);
-            driveStraight(DRIVE_SPEED, -10);
+            driveStraight(DRIVE_SPEED, -8);
             sleep(500);
             clawArm.setClawArmPosition(0);
             sleep(1000);
@@ -676,7 +680,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
             sleep(1000);
         }
-        */
+         */
 
     }
 
@@ -763,14 +767,14 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         // Ensure that the OpMode is still active
         // Determine new target position, and pass to motor controller
         int moveCounts = (int) (distance * COUNTS_PER_INCH);
-        backTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
-        frontTarget = frontRightDrive.getCurrentPosition() + moveCounts;
+        backLeftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
+        frontLeftTarget = frontRightDrive.getCurrentPosition() + moveCounts;
 
         // Set Target FIRST, then turn on RUN_TO_POSITION
-        frontLeftDrive.setTargetPosition(backTarget);
-        backLeftDrive.setTargetPosition(backTarget);
-        frontRightDrive.setTargetPosition(frontTarget);
-        backRightDrive.setTargetPosition(frontTarget);
+        frontLeftDrive.setTargetPosition(backLeftTarget);
+        backLeftDrive.setTargetPosition(backLeftTarget);
+        frontRightDrive.setTargetPosition(frontLeftTarget);
+        backRightDrive.setTargetPosition(frontLeftTarget);
 
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -811,14 +815,16 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         double heading = getHeading();
         // Determine new target position, and pass to motor controller
         int moveCounts = (int)(distance * COUNTS_PER_INCH_STRAFE);
-        backTarget = backLeftDrive.getCurrentPosition() + moveCounts;
-        frontTarget = frontLeftDrive.getCurrentPosition() - moveCounts;
+        backLeftTarget = backLeftDrive.getCurrentPosition() - moveCounts;
+        frontLeftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
+        backRightTarget = backRightDrive.getCurrentPosition() - moveCounts;
+        frontRightTarget = frontRightDrive.getCurrentPosition() + moveCounts;
 
         // Set Target FIRST, then turn on RUN_TO_POSITION
-        frontLeftDrive.setTargetPosition(frontTarget);
-        backLeftDrive.setTargetPosition(backTarget);
-        frontRightDrive.setTargetPosition(backTarget);
-        backRightDrive.setTargetPosition(frontTarget);
+        frontLeftDrive.setTargetPosition(frontLeftTarget);
+        backLeftDrive.setTargetPosition(backLeftTarget);
+        frontRightDrive.setTargetPosition(backRightTarget);
+        backRightDrive.setTargetPosition(frontRightTarget);
 
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -991,7 +997,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         telemetry.addData("Gyro val: ", imu.getRobotYawPitchRollAngles());
         if (straight) {
             telemetry.addData("Motion", "Drive Straight");
-            telemetry.addData("Target Pos L:R",  "%7d:%7d", backTarget, frontTarget);
+            telemetry.addData("Target Pos L:R",  "%7d:%7d", backLeftTarget, frontLeftTarget);
             telemetry.addData("Actual Pos L:R",  "%7d:%7d",      frontLeftDrive.getCurrentPosition(),
                     frontRightDrive.getCurrentPosition());
         } else {
