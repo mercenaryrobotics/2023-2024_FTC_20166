@@ -185,7 +185,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private final double DROP_POS_CENTER = 25;
     private final double PUSH_OFF_DISTANCE_CENTER = 8;
     private final double DROP_POS_SIDE = 29;
-    private final double PUSH_OFF_DISTANCE_SIDE = 4;
+    private final double PUSH_OFF_DISTANCE_SIDE = 8;
     private int frontRightTarget;
     private int backRightTarget;
 
