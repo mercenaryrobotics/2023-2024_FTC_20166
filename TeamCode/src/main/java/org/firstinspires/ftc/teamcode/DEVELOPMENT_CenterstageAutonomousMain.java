@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode;
 
 //import static org.firstinspires.ftc.teamcode.SubSystemVariables.ALLIANCE_COLOR.BLUE;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -98,11 +99,12 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
  */
 
 @Autonomous
+@Config
 //@Disabled
 public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private static final double PIXEL_DROP_ALIGN_DISTANCE = 2.5;
     private static final double PIXEL_DROP_ADJUST_DISTANCE = 4;
-    private static final int TILE_LENGTH = 24;
+    private static final double TILE_LENGTH = 24;
     private boolean isTestBot = true;
     private SubSystemClawArm clawArm = null;
     private SubSystemClaw claw = null;
@@ -139,7 +141,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
 
     static final double     CORRECTION_FACTOR       = (60.0/58.0);
-    static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0);
+    static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0) * (6.0/7.0);
     static final double     COUNTS_PER_MOTOR_REV    = 537.7 ;   // eg: GoBILDA 312 RPM Yellow Jacket
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
@@ -184,8 +186,9 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private double CorrectionDistance;
     private final double DROP_POS_CENTER = 25;
     private final double PUSH_OFF_DISTANCE_CENTER = 8;
-    private final double DROP_POS_SIDE = 29;
-    private final double PUSH_OFF_DISTANCE_SIDE = 8;
+    private final double DROP_POS_SIDE = 30;
+    private final double PUSH_OFF_DISTANCE_SIDE = 6
+            ;
     private int frontRightTarget;
     private int backRightTarget;
 
@@ -274,6 +277,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         //telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
         //telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
         telemetry.addData("Park in backstage? ", SubSystemVariables.parkInBackstage);
+        telemetry.addData("Pixel pos: ", PixelPos);
         telemetry.update();
     }
 
@@ -306,7 +310,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     }
 
     private void InitParameters() {
-        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
             SubSystemVariables.headingToBackboard = 90;
             Mirror = -1;
         } else {
@@ -395,6 +399,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
 
         imu.resetYaw();
+        /*
         InitParameters();
         AutonDistanceDropPixel();
         if(SubSystemVariables.parkInBackstage) {
@@ -405,8 +410,11 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         sleep(1000);
         clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(0);
+         */
 
-        //Strafe(SubSystemVariables.STRAFE_SPEED, 15);
+        Strafe(SubSystemVariables.STRAFE_SPEED, 60);
+        //turnToHeading(TURN_SPEED, -90);
+        //driveStraight(driveSpeed-0.3, 80);
     }
 
     private void parkNew() {
@@ -602,34 +610,35 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     }
 
     private void processPropPosition(int position) {
+        clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER_AUTO);
 
         if(position == 2) {
             driveStraight(DRIVE_SPEED, DROP_POS_CENTER - SCANNING_DISTANCE);
             driveStraight(DRIVE_SPEED + 0.3, PUSH_OFF_DISTANCE_CENTER);
             sleep(100);
             driveStraight(DRIVE_SPEED, -PUSH_OFF_DISTANCE_CENTER);
-            sleep(500);
+            sleep(1500);
             clawArm.setClawArmPosition(0);
-            sleep(500);
+            sleep(1500);
             claw.closeClaw(false);
-            sleep(500);
-            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
-            sleep(500);
-            turnToHeading(TURN_SPEED, Mirror * 90);
-            holdHeading(TURN_SPEED, Mirror * 90, 0.5);
+            sleep(1500);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
+            sleep(1500);
+            turnToHeading(TURN_SPEED, -Mirror * 90);
+            holdHeading(TURN_SPEED, -Mirror * 90, 0.5);
         } else {
             driveStraight(DRIVE_SPEED, DROP_POS_SIDE - SCANNING_DISTANCE + (ForwardBackward * PIXEL_DROP_ADJUST_DISTANCE));
             turnToHeading(TURN_SPEED, (ForwardBackward * 90));
             holdHeading(TURN_SPEED, (ForwardBackward * 90), 0.5);
             driveStraight(DRIVE_SPEED + 0.3, PUSH_OFF_DISTANCE_SIDE);
-            sleep(100);
+            sleep(1000);
             driveStraight(DRIVE_SPEED, -PUSH_OFF_DISTANCE_SIDE);
-            sleep(500);
+            sleep(1500);
             clawArm.setClawArmPosition(0);
-            sleep(500);
+            sleep(1500);
             claw.closeClaw(false);
-            sleep(500);
-            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            sleep(1500);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
             sleep(500);
             if (SkipAdjust != -1) {
                 Strafe(DRIVE_SPEED, CorrectionDistance);
@@ -767,14 +776,16 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         // Ensure that the OpMode is still active
         // Determine new target position, and pass to motor controller
         int moveCounts = (int) (distance * COUNTS_PER_INCH);
-        backLeftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
-        frontLeftTarget = frontRightDrive.getCurrentPosition() + moveCounts;
+        backLeftTarget = backLeftDrive.getCurrentPosition() + moveCounts;
+        frontLeftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
+        backRightTarget = backRightDrive.getCurrentPosition() + moveCounts;
+        frontRightTarget = frontRightDrive.getCurrentPosition() + moveCounts;
 
         // Set Target FIRST, then turn on RUN_TO_POSITION
-        frontLeftDrive.setTargetPosition(backLeftTarget);
+        frontLeftDrive.setTargetPosition(frontLeftTarget);
         backLeftDrive.setTargetPosition(backLeftTarget);
-        frontRightDrive.setTargetPosition(frontLeftTarget);
-        backRightDrive.setTargetPosition(frontLeftTarget);
+        frontRightDrive.setTargetPosition(frontRightTarget);
+        backRightDrive.setTargetPosition(backRightTarget);
 
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -794,6 +805,8 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
 
             // if driving in reverse, the motor correction also needs to be reversed
+            if (distance < 0)
+                turnSpeed *= -1.0;
 
             // Apply the turning correction to the current driving speed.
             moveRobot(driveSpeed, turnSpeed);

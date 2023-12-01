@@ -11,7 +11,7 @@ public class SubSystemVariables {
     public static final int INTAKE_LIFT_POS_1 = 5;
     public static final int INTAKE_LIFT_POS_2 = 0;
     public static final int INTAKE_LIFT_POS_3 = 800;
-
+    public static final double CLAW_ARM_POWER_AUTO = 0.3;
     public static final double CLAW_ARM_POWER = 0.6;
     public static final int CLAW_ARM_POS_0 = 570;
     public static final int CLAW_ARM_POS_1 = 5;
