@@ -141,7 +141,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
 
     static final double     CORRECTION_FACTOR       = (60.0/58.0);
-    static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0) * (6.0/7.0);
+    static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0);
     static final double     COUNTS_PER_MOTOR_REV    = 537.7 ;   // eg: GoBILDA 312 RPM Yellow Jacket
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
@@ -162,33 +162,32 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
     static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable
     static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable4
-    static int Mirror;
+    public static int Mirror;
     private int PixelPos;
 
-    private final double distanceDropPos1 = 29.0;
-    private final double finishDistancePos1 = 2.0;
-    private final double distanceDropPos2 = 29.0 - 4.0;
-    private final double distanceDropPos3 = 29.0;
-    private final double finishDistancePos3 = 3.0;
-    private int propStartingPos = 0;
+    public static final double distanceDropPos1 = 29.0;
+    public static final double finishDistancePos1 = 2.0;
+    public static final double distanceDropPos2 = 29.0 - 4.0;
+    public static final double distanceDropPos3 = 29.0;
+    public static final double finishDistancePos3 = 3.0;
+    public static int propStartingPos = 0;
 
-    private final int SCANNING_DISTANCE = 9;
+    public static final int SCANNING_DISTANCE = 9;
     private SubSystemDrivetrain driveTerrain;
-    private int TopBottomMultiplier;
-    private int InvertStrafe;
-    private int ParkStrafeMultiplier;
-    private int TINY_DISTANCE = 0;
-    private int DistanceMoved;
-    private int ForwardBackward;
-    private int PixelPositionMultiplier;
-    private int PixelCenter;
-    private int SkipAdjust;
-    private double CorrectionDistance;
+    public static int TopBottomMultiplier;
+    public static int InvertStrafe;
+    public static int ParkStrafeMultiplier;
+    public static int TINY_DISTANCE = 0;
+    public static int DistanceMoved;
+    public static int ForwardBackward;
+    public static int PixelPositionMultiplier;
+    public static int PixelCenter;
+    public static int SkipAdjust;
+    public static double CorrectionDistance;
     private final double DROP_POS_CENTER = 25;
     private final double PUSH_OFF_DISTANCE_CENTER = 8;
     private final double DROP_POS_SIDE = 30;
-    private final double PUSH_OFF_DISTANCE_SIDE = 6
-            ;
+    private final double PUSH_OFF_DISTANCE_SIDE = 6;
     private int frontRightTarget;
     private int backRightTarget;
 
@@ -353,13 +352,13 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
 
         if (PixelPos == 1) {
-            PixelPositionMultiplier = -1;
+            PixelPositionMultiplier = 1;
             PixelCenter = 0;
         } else if (PixelPos == 2) {
             PixelPositionMultiplier = 0;
             PixelCenter = 1;
         } else {
-            PixelPositionMultiplier = 1;
+            PixelPositionMultiplier = -1;
             PixelCenter = 0;
         }
 
@@ -399,7 +398,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
 
         imu.resetYaw();
-        /*
+
         InitParameters();
         AutonDistanceDropPixel();
         if(SubSystemVariables.parkInBackstage) {
@@ -410,16 +409,25 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         sleep(1000);
         clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(0);
-         */
 
-        Strafe(SubSystemVariables.STRAFE_SPEED, 60);
+
+        //Strafe(SubSystemVariables.STRAFE_SPEED, 60);
         //turnToHeading(TURN_SPEED, -90);
         //driveStraight(driveSpeed-0.3, 80);
     }
 
     private void parkNew() {
+        sleep(5000);
+        Strafe(DRIVE_SPEED
 
-        Strafe(SubSystemVariables.STRAFE_SPEED, (InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH) + (InvertStrafe * ParkStrafeMultiplier * CorrectionDistance));
+
+
+
+
+
+                ,  ((InvertStrafe * ParkStrafeMultiplier * CorrectionDistance)));
+        Strafe(SubSystemVariables.STRAFE_SPEED, (InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH));
+        sleep(5000);
         sleep(100);
         driveStraight(DRIVE_SPEED, InvertStrafe * SubSystemVariables.distToBackboard);
 
@@ -1020,6 +1028,10 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         telemetry.addData("Heading- Target : Current", "%5.2f : %5.0f", targetHeading, getHeading());
         telemetry.addData("Error  : Steer Pwr",  "%5.1f : %5.1f", headingError, turnSpeed);
         telemetry.addData("Wheel Speeds L : R", "%5.2f : %5.2f", leftSpeed, rightSpeed);
+        telemetry.addData("\n Correction Distance: ", CorrectionDistance);
+        telemetry.addData("Invert Strafe: " , InvertStrafe);
+        telemetry.addData("Park Strafe Multiplier: ", ParkStrafeMultiplier);
+
         telemetry.update();
     }
 

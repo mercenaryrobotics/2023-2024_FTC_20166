@@ -15,9 +15,10 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
 @TeleOp
-
+@Config
 //@Disabled
 public class CenterstageMainTeleOp extends LinearOpMode {
+    public static double SPEED_MULTIPLIER = 1.2;
     private ElapsedTime runtime     = new ElapsedTime();
     private boolean hangLiftHang = false;
     private int intakeLiftPosition = 0;
@@ -198,10 +199,21 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
         if (gamepad1.b && gamepad1.dpad_right && endgame)
             hangRelease = true;
+
+        if(gamepad1.left_bumper) {
+            SPEED_MULTIPLIER = 1.7;
+        }
+        if(gamepad1.right_bumper) {
+            SPEED_MULTIPLIER = 0.6;
+        }
+
+        if(!gamepad1.left_bumper && !gamepad1.right_bumper) {
+            SPEED_MULTIPLIER = 1;
+        }
      }
     private void drivebaseUpdate()
     {
-        double translateSpeed = Math.hypot(joystickTranslateX, joystickTranslateY);
+        double translateSpeed = Math.hypot(joystickTranslateX, joystickTranslateY) * SPEED_MULTIPLIER;
         //Heading 0 = forward, -ve right, +ve left
         double heading = Math.atan2(-joystickTranslateX, -joystickTranslateY);
 
