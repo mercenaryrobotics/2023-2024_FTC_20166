@@ -5,7 +5,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,7 +12,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SampleRevBlinkinLedDriver;
 //This is a test on 11/23 to push to githuv
 @TeleOp
 @Config
@@ -31,7 +29,7 @@ public class Motor_Test extends LinearOpMode {
     private DcMotorEx frontRightDrive = null;
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
-    private DcMotorEx testMotor = null;
+    private DcMotorEx intakeLift = null;
 
     private Servo testServo = null;
     private Servo torqueServo = null;
@@ -39,6 +37,9 @@ public class Motor_Test extends LinearOpMode {
 
     public static double servoMax = 1.0;
     public static double servoMin = 0.0;
+    private int motorToTest = 1;
+    private DcMotorEx hopperLift;
+    private float powerToSet;
 
     public void initializeHardware()
     {
@@ -47,6 +48,8 @@ public class Motor_Test extends LinearOpMode {
         frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightDrive");
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftDrive");
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightDrive");
+        intakeLift = hardwareMap.get(DcMotorEx.class, "intakeLift");
+        hopperLift = hardwareMap.get(DcMotorEx.class, "hopperLift");
 
         frontRightDrive.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightDrive.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -55,25 +58,32 @@ public class Motor_Test extends LinearOpMode {
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intakeLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        hopperLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //testMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        intakeLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        hopperLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frontLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        testMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //intakeLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //hopperLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        testServo = hardwareMap.get(Servo.class, "hopperGate");
+        testServo = hardwareMap.get(Servo.class, "hopperGateServo");
         torqueServo = hardwareMap.get(Servo.class, "torqueServo");
         hopperServo = hardwareMap.get(Servo.class, "hopperServo");
+    }
+
+    private static void initTestmotor() {
     }
 
     private static void rotatePoints(double[] xPoints, double[] yPoints, double angle) {
@@ -119,9 +129,12 @@ public class Motor_Test extends LinearOpMode {
     }
 
     private void displayTelemetry() {
-        telemetry.addLine("hello world");
-        telemetry.addData("motor encoder: ", frontLeftDrive.getCurrentPosition());
-        updateTelemetry(telemetry);
+        telemetry.addLine("Iniyann is the greatest programmer in the world");
+        telemetry.addData("Motor (intake is true, hopper is false)", motorToTest);
+
+        telemetry.addData("Motor 1 encoder: ", intakeLift.getCurrentPosition());
+        telemetry.addData("Motor 2 encoder: ", hopperLift.getCurrentPosition());
+        telemetry.update();
     }
 
     public void runOpMode()  {
@@ -132,6 +145,21 @@ public class Motor_Test extends LinearOpMode {
         while (opModeIsActive()) {
             displayTelemetry();
             updateController();
+            updateTestMotors();
+
+        }
+    }
+
+    private void updateTestMotors() {
+        if(motorToTest == 1) {
+            intakeLift.setPower(powerToSet);
+
+            hopperLift.setPower(0);
+        }
+        if(motorToTest == 2) {
+            intakeLift.setPower(0);
+            telemetry.addLine("powering motor 2");
+            hopperLift.setPower(powerToSet);
         }
     }
 
@@ -155,13 +183,21 @@ public class Motor_Test extends LinearOpMode {
         if(gamepad1.b)
             setHopperServo(servoMin); //HopperServo is 0.4 for up
          */
+        if(gamepad1.dpad_left) {
+            motorToTest = 1;
+        } else if (gamepad1.dpad_right) {
+            motorToTest = 2;
+        }
 
-        if(gamepad1.left_trigger > 0.1) { // -3200 is max
-            frontLeftDrive.setPower(gamepad1.left_trigger);
+        if(gamepad1.left_trigger > 0.1) {
+            powerToSet = gamepad1.left_trigger;
+            telemetry.addLine("powering motor");
         } else if (gamepad1.right_trigger > 0.1 ) {
-            frontLeftDrive.setPower(-gamepad1.right_trigger);
+            powerToSet = -gamepad1.right_trigger;
+            telemetry.addLine("powering motor");
         } else {
-            frontLeftDrive.setPower(0);
+            powerToSet = 0;
+            telemetry.addLine("Not powering any motor");
         }
 
     }

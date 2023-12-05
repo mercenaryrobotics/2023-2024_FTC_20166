@@ -214,6 +214,10 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         if(!gamepad1.left_bumper && !gamepad1.right_bumper) {
             SPEED_MULTIPLIER = 1;
         }
+
+        if(gamepad1.right_bumper && gamepad1.right_trigger > 0.5 && gamepad1.start && gamepad2.right_bumper && gamepad2.right_trigger > 0.5 && gamepad2.start) {
+            imu.resetYaw();
+        }
      }
     private void drivebaseUpdate()
     {

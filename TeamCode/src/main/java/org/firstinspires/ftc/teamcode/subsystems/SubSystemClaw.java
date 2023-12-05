@@ -34,7 +34,7 @@ public class SubSystemClaw {
 
         }
         else {
-            claw.setPosition(0);
+            claw.setPosition(0.25);
             SubSystemVariables.CLAW_OPEN = true;
         }
     }
