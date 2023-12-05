@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 
 @Config
 public class SubSystemVariables {
-    public static double distToBackboard;
     public static int headingToBackboard;
 
     public static final int INTAKE_LIFT_POS_0 = 143;

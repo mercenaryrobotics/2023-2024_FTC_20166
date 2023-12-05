@@ -159,6 +159,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
 
     private final int SCANNING_DISTANCE = 9;
     private SubSystemDrivetrain driveTerrain;
+    private int ParkDistance;
 
     public void initializeMotors() throws InterruptedException {
         // Initialize the drive system variables.
@@ -278,11 +279,11 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
-            SubSystemVariables.distToBackboard = 72;
+            ParkDistance = 72;
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-            SubSystemVariables.distToBackboard = 24;
+            ParkDistance = 24;
         }
     }
 
@@ -329,7 +330,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
     private void AutonMoveToBackstage() {
         turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
         holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-        driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard, SubSystemVariables.headingToBackboard);
+        driveStraight(DRIVE_SPEED, ParkDistance, SubSystemVariables.headingToBackboard);
 
         if(SubSystemVariables.parkingPos == 1) {
             turnToHeading(TURN_SPEED, 180);

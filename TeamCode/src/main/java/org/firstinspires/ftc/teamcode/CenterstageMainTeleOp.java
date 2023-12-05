@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -29,7 +31,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private boolean endgame = false;
 
     public FtcDashboard dashboard;
-
+    private IMU imu;
 
 
     private enum ALLIANCE_COLOR {RED, BLUE}
@@ -84,15 +86,17 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         //Use this time to run the vision code to detect team token position
         // Abort this loop if started or stopped.
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+
         while (!(isStarted() || isStopRequested())) {
-            if (gamepad1.b){alianceColor = ALLIANCE_COLOR.RED;}
-            if (gamepad1.x){alianceColor = ALLIANCE_COLOR.BLUE;}
-
-            if (gamepad1.left_bumper) {startPosition = START_POSITION.LEFT;}
-            if (gamepad1.right_bumper) {startPosition = START_POSITION.RIGHT;}
-
-            telemetry.addData("Alliance Color", alianceColor);
-            telemetry.addData("Start position", startPosition);
+            if(gamepad1.right_bumper && gamepad1.right_trigger > 0.5 && gamepad1.start && gamepad2.right_bumper && gamepad2.right_trigger > 0.5 && gamepad2.start) {
+                imu.resetYaw();
+            }
 
             telemetry.addData("Iniyann is the greatest programmer ", "and the best driver alive");
 

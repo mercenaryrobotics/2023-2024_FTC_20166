@@ -162,9 +162,6 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
     static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable
     static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable4
-    public static int Mirror;
-    private int PixelPos;
-
     public static final double distanceDropPos1 = 29.0;
     public static final double finishDistancePos1 = 2.0;
     public static final double distanceDropPos2 = 29.0 - 4.0;
@@ -174,22 +171,31 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
 
     public static final int SCANNING_DISTANCE = 9;
     private SubSystemDrivetrain driveTerrain;
-    public static int TopBottomMultiplier;
-    public static int InvertStrafe;
-    public static int ParkStrafeMultiplier;
     public static int TINY_DISTANCE = 0;
-    public static int DistanceMoved;
-    public static int ForwardBackward;
-    public static int PixelPositionMultiplier;
-    public static int PixelCenter;
-    public static int SkipAdjust;
-    public static double CorrectionDistance;
-    private final double DROP_POS_CENTER = 25;
+        private final double DROP_POS_CENTER = 25;
     private final double PUSH_OFF_DISTANCE_CENTER = 8;
     private final double DROP_POS_SIDE = 30;
     private final double PUSH_OFF_DISTANCE_SIDE = 6;
     private int frontRightTarget;
     private int backRightTarget;
+
+    public static int CurrentHeading = 0;
+    public static int Mirror = 1;
+    public static int TopBottomMultiplier = 1;
+    public static int InvertStrafe = 1;
+    public static int ParkStrafeMultiplier = 0;
+    public static int PixelPositionMultiplier = 0;
+    public static int SkipAdjust = 0;
+    public static int ParkDistance = 0;
+    public static double CorrectionDistance = 0;
+    public static int ForwardBackward = 0;
+    public static int PixelCenter = 0;
+    public static int ParkPos = 0;
+    public static int PixelPos = 0;
+
+    public static int TOP_PARK_DISTANCE = 38;
+    public static int BOTTOM_PARK_DISTANCE = 86;
+    public static boolean DoPark;
 
     public void initializeMotors() throws InterruptedException {
         // Initialize the drive system variables.
@@ -307,8 +313,71 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             SubSystemVariables.parkInBackstage = true;
         }
     }
+    private  void UpdateParameters_NEW() {
+        if (PixelPos == 1) {
+            ForwardBackward = 1;
+        } else {
+            ForwardBackward = -1;
+        }
 
-    private void InitParameters() {
+        if (((PixelPos == 3) && (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE)) || ((PixelPos == 1) && (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED))) {
+            InvertStrafe = -1;
+        } else{
+            InvertStrafe = 1;
+        }
+
+        if (PixelPos == 1) {
+            PixelPositionMultiplier = 1;
+            PixelCenter = 0;
+        } else if (PixelPos == 2) {
+            PixelPositionMultiplier = 0;
+            PixelCenter = 1;
+        } else {
+            PixelPositionMultiplier = -1;
+            PixelCenter = 0;
+        }
+
+    //Check if we would end up re-centering on the tile only to then move back the way we came
+        SkipAdjust = Mirror * ParkStrafeMultiplier * PixelPositionMultiplier;
+
+        //if (SkipAdjust == -1) {
+        CorrectionDistance = -(PIXEL_DROP_ADJUST_DISTANCE + (ForwardBackward * PIXEL_DROP_ALIGN_DISTANCE));
+        //}
+    }
+    private  void InitParameters_NEW() {
+        if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) { //#Left or right side of the field? Which way to turn to face the backdrop
+            Mirror = -1;
+            //CurrentHeading = 90;
+        }
+        else {
+            Mirror = 1;
+            //CurrentHeading = -90;
+        }
+
+         if (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
+            TopBottomMultiplier = 1;
+            ParkDistance = TOP_PARK_DISTANCE;
+        }
+        else {
+             TopBottomMultiplier = -1;
+             ParkDistance = BOTTOM_PARK_DISTANCE;
+         }
+
+        if (ParkPos == 1) {
+            ParkStrafeMultiplier = -1;
+            DoPark = true;
+        } else if(ParkPos == 2) {
+            ParkStrafeMultiplier = 0;
+            DoPark = true;
+        } else if (ParkPos == 3) {
+            ParkStrafeMultiplier = 1;
+            DoPark = true;
+        } else {
+            DoPark = false;
+        }
+    }
+    /*
+    private void InitParameters_OLD() {
         if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
             SubSystemVariables.headingToBackboard = 90;
             Mirror = -1;
@@ -320,10 +389,10 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
 
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
-            SubSystemVariables.distToBackboard = SubSystemVariables.AUTON_BOTTOM_BACKBOARD_DISTANCE;
+            SubSystemVariables.ParkDistance = SubSystemVariables.AUTON_BOTTOM_BACKBOARD_DISTANCE;
             TopBottomMultiplier = -1;
         } else if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-            SubSystemVariables.distToBackboard = SubSystemVariables.AUTON_TOP_BACKBOARD_DISTANCE;
+            SubSystemVariables.ParkDistance = SubSystemVariables.AUTON_TOP_BACKBOARD_DISTANCE;
             TopBottomMultiplier = 1;
         }
 
@@ -331,13 +400,14 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             ParkStrafeMultiplier = -1;
         } else if (SubSystemVariables.parkingPos == 2) {
             ParkStrafeMultiplier = 0;
-        } else /* if (SubSystemVariables.parkingPos == 3) */{
+        } else /* if (SubSystemVariables.parkingPos == 3) *\/{
             ParkStrafeMultiplier = 1;
         }
 
     }
-
-    private void UpdateParameters() {
+     */
+    /*
+    private void UpdateParameters_OLD() {
         if((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && PixelPos == 3) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && PixelPos == 1)) {
             InvertStrafe = -1;
         } else {
@@ -366,6 +436,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
 
         CorrectionDistance =  -(PIXEL_DROP_ADJUST_DISTANCE + (ForwardBackward * PIXEL_DROP_ALIGN_DISTANCE));
     }
+     */
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -399,16 +470,18 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
 
         imu.resetYaw();
 
-        InitParameters();
+        InitParameters_NEW();
         AutonDistanceDropPixel();
         if(SubSystemVariables.parkInBackstage) {
-            parkNew();
+            park_NEW();
         }
 
         claw.closeClaw(true);
         sleep(1000);
         clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER);
         clawArm.setClawArmPosition(0);
+        sendTelemetry();
+        //sleep(1000000);
 
 
         //Strafe(SubSystemVariables.STRAFE_SPEED, 60);
@@ -416,20 +489,11 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         //driveStraight(driveSpeed-0.3, 80);
     }
 
-    private void parkNew() {
-        sleep(5000);
-        Strafe(DRIVE_SPEED
-
-
-
-
-
-
-                ,  ((InvertStrafe * ParkStrafeMultiplier * CorrectionDistance)));
-        Strafe(SubSystemVariables.STRAFE_SPEED, (InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH));
-        sleep(5000);
+    private void park_NEW() {
+        //sleep(5000);
+        Strafe(SubSystemVariables.STRAFE_SPEED, (InvertStrafe * ParkStrafeMultiplier * TILE_LENGTH) + (InvertStrafe * ParkStrafeMultiplier * CorrectionDistance));
         sleep(100);
-        driveStraight(DRIVE_SPEED, InvertStrafe * SubSystemVariables.distToBackboard);
+        driveStraight(DRIVE_SPEED, InvertStrafe * ParkDistance);
 
 //
 //        if(propPosition == 2) {
@@ -501,14 +565,14 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
          */
     }
-
+    /*
     private void AutonMoveToBackstage() {
 
         if(PixelPos == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
             driveStraight(DRIVE_SPEED, 5);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard);
+            driveStraight(DRIVE_SPEED, ParkDistance);
             if(SubSystemVariables.parkingPos == 2) {
                 driveStraight(DRIVE_SPEED, 10);
             } else {
@@ -543,7 +607,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         if(PixelPos == 3 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard);
+            driveStraight(DRIVE_SPEED, ParkDistance);
             if(SubSystemVariables.parkingPos == 2) {
                 driveStraight(DRIVE_SPEED, 10);
             } else {
@@ -562,7 +626,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             driveStraight(DRIVE_SPEED, 5);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard);
+            driveStraight(DRIVE_SPEED, ParkDistance);
             if(SubSystemVariables.parkingPos == 2) {
                 driveStraight(DRIVE_SPEED, 10);
             } else {
@@ -581,7 +645,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             Strafe(SubSystemVariables.STRAFE_SPEED, 15);
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.ParkDistance);
             if(SubSystemVariables.parkingPos == 2) {
                 driveStraight(DRIVE_SPEED, 15);
             } else {
@@ -594,7 +658,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         if(PixelPos == 1 && SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
             turnToHeading(TURN_SPEED, SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, SubSystemVariables.headingToBackboard, 0.5);
-            driveStraight(DRIVE_SPEED, SubSystemVariables.distToBackboard);
+            driveStraight(DRIVE_SPEED, SubSystemVariables.ParkDistance);
             if(SubSystemVariables.parkingPos == 2) {
                 driveStraight(DRIVE_SPEED, 10);
             } else {
@@ -610,14 +674,55 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
         }
 
     }
+     */
     private void AutonDistanceDropPixel() {
         driveStraight(DRIVE_SPEED, SCANNING_DISTANCE);
         PixelPos = detectPropDistance();
-        UpdateParameters();
-        processPropPosition(PixelPos);
+        UpdateParameters_NEW();
+        processPropPosition_NEW(PixelPos);
     }
 
-    private void processPropPosition(int position) {
+    private void processPropPosition_NEW(int position) {
+        if (PixelPos == 2) {
+            driveStraight(DRIVE_SPEED, DROP_POS_CENTER - SCANNING_DISTANCE);
+            driveStraight(DRIVE_SPEED + 0.3, PUSH_OFF_DISTANCE_CENTER);
+            sleep(100);
+            driveStraight(DRIVE_SPEED, -PUSH_OFF_DISTANCE_CENTER);
+            sleep(500);
+            clawArm.setClawArmPosition(0);
+            sleep(500);
+            claw.closeClaw(false);
+            sleep(500);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            sleep(500);
+            rotateBy(TURN_SPEED, Mirror * 90);
+        } else {
+            driveStraight(DRIVE_SPEED, DROP_POS_SIDE - SCANNING_DISTANCE + (ForwardBackward * PIXEL_DROP_ADJUST_DISTANCE));
+            rotateBy(TURN_SPEED, (ForwardBackward * 90));
+            driveStraight(DRIVE_SPEED + 0.3, PUSH_OFF_DISTANCE_SIDE);
+            sleep(100);
+            driveStraight(DRIVE_SPEED, -PUSH_OFF_DISTANCE_SIDE);
+            sleep(500);
+            clawArm.setClawArmPosition(0);
+            sleep(500);
+            claw.closeClaw(false);
+            sleep(500);
+            clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
+            sleep(500);
+            if (SkipAdjust != -1) {
+                //print("MADE IT HERE", CorrectionDistance);
+                Strafe(DRIVE_SPEED, CorrectionDistance);
+                CorrectionDistance = 0; //Don't do the correction later
+            }
+        }
+    }
+
+    private void rotateBy(double speed, int angle) {
+        turnToHeading(speed, getHeading() + angle);
+        holdHeading(TURN_SPEED, 0, 0.5);
+    }
+
+    private void processPropPosition_OLD(int position) {
         clawArm.setClawArmSpeed(SubSystemVariables.CLAW_ARM_POWER_AUTO);
 
         if(position == 2) {
@@ -819,9 +924,11 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             // Apply the turning correction to the current driving speed.
             moveRobot(driveSpeed, turnSpeed);
 
-            // Display drive status for the driver.
-            sendTelemetry(true);
+
         }
+
+        // Display drive status for the driver.
+        telemetry.addData("Driving for dist: ", distance);
 
         // Stop all motion & Turn off RUN_TO_POSITION
         moveRobot(0, 0);
@@ -871,9 +978,11 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             // Apply the turning correction to the current driving speed.
             moveRobot(driveSpeed, turnSpeed);
 
-            // Display drive status for the driver.
-            sendTelemetry(true);
+
         }
+
+        // Display drive status for the driver.
+        telemetry.addData("Strafing for: ", distance);
 
         // Stop all motion & Turn off RUN_TO_POSITION
         moveRobot(0, 0);
@@ -914,9 +1023,11 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             // Pivot in place by applying the turning correction
             moveRobot(0, turnSpeed);
 
-            // Display drive status for the driver.
-            sendTelemetry(false);
+
         }
+
+        // Display drive status for the driver.
+        telemetry.addData("Turning for: ", heading);
 
         // Stop all motion;
         moveRobot(0, 0);
@@ -952,7 +1063,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
             moveRobot(0, turnSpeed);
 
             // Display drive status for the driver.
-            sendTelemetry(false);
+            //sendTelemetry();
         }
 
         // Stop all motion;
@@ -1010,28 +1121,9 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     }
 
     /**
-     *  Display the various control parameters while driving
-     *
-     * @param straight  Set to true if we are driving straight, and the encoder positions should be included in the telemetry.
+     * Display the various control parameters while driving
      */
-    private void sendTelemetry(boolean straight) {
-        telemetry.addData("Gyro val: ", imu.getRobotYawPitchRollAngles());
-        if (straight) {
-            telemetry.addData("Motion", "Drive Straight");
-            telemetry.addData("Target Pos L:R",  "%7d:%7d", backLeftTarget, frontLeftTarget);
-            telemetry.addData("Actual Pos L:R",  "%7d:%7d",      frontLeftDrive.getCurrentPosition(),
-                    frontRightDrive.getCurrentPosition());
-        } else {
-            telemetry.addData("Motion", "Turning");
-        }
-
-        telemetry.addData("Heading- Target : Current", "%5.2f : %5.0f", targetHeading, getHeading());
-        telemetry.addData("Error  : Steer Pwr",  "%5.1f : %5.1f", headingError, turnSpeed);
-        telemetry.addData("Wheel Speeds L : R", "%5.2f : %5.2f", leftSpeed, rightSpeed);
-        telemetry.addData("\n Correction Distance: ", CorrectionDistance);
-        telemetry.addData("Invert Strafe: " , InvertStrafe);
-        telemetry.addData("Park Strafe Multiplier: ", ParkStrafeMultiplier);
-
+    private void sendTelemetry() {
         telemetry.update();
     }
 
