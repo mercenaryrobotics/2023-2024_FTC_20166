@@ -13,11 +13,13 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopper;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntake;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopperLift;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
 @TeleOp
 
 //@Disabled
 public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
+    private static double SPEED_MULTIPLIER = 1.2;
     private ElapsedTime pauseTimer = new ElapsedTime();
     private double pauseTimerDelay = 0;
     private ElapsedTime runtime     = new ElapsedTime();
@@ -33,6 +35,8 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private double hopperLiftSpeed = 0;
     private boolean hopperExtendManual = false;
     private boolean hopperExtendAuto = false;
+    private SubSystemIntakeLift intakeLift;
+
     private enum BACKDROP_ASSIST_STATE {ASSIST_WAIT, ASSIST_ROTATE, ASSIST_APPROACH, ASSIST_RAISE, ASSIST_DROP, ASSIST_RETRACT, ASSIST_PAUSE, ASSIST_DONE}
     private  BACKDROP_ASSIST_STATE backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_WAIT;
     private  BACKDROP_ASSIST_STATE backdropAssistStateReturn = BACKDROP_ASSIST_STATE.ASSIST_WAIT;
@@ -42,7 +46,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private double targetHeading = 0.0;
     private boolean FieldCentric = true;
     private SubSystemDrivetrain drivetrain=null;
-    private SubSystemIntake intake = null;
+    //private SubSystemIntake intake = null;
     private SubSystemHangLift hangLift = null;
     private SubSystemDroneLaunch drone = null;
     private SubSystemHopper hopper = null;
@@ -67,12 +71,12 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
 
     public void initHardware() throws InterruptedException {
         drivetrain       = new SubSystemDrivetrain(hardwareMap);
-        intake           = new SubSystemIntake(hardwareMap);
+        //intake           = new SubSystemIntake(hardwareMap);
         hangLift         = new SubSystemHangLift(hardwareMap);
         hopper           = new SubSystemHopper(hardwareMap);
         drone            = new SubSystemDroneLaunch(hardwareMap);
         hopperLift       = new SubSystemHopperLift(hardwareMap);
-        intake           = new SubSystemIntake(hardwareMap);
+        intakeLift       = new SubSystemIntakeLift(hardwareMap);
 
         gamepadsReset();
     }
@@ -93,7 +97,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private void disableHardware() {
 
         drivetrain.disableDrivetrainMotors();
-        intake.setIntakePower(SubSystemVariables.INTAKE_LIFT_POWER);
+        intakeLift.setIntakeLiftPower(SubSystemVariables.INTAKE_LIFT_POWER);
         hangLift.setHangLiftPower(0);
     }
 
@@ -143,7 +147,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         if (gamepad1.b && gamepad1.dpad_right && endgame)
             hangRelease = true;
 
-        if (gamepad1.right_bumper)
+        if (gamepad1.start)
             doAutoDropPixel = true;
         else
             doAutoDropPixel = false;
@@ -172,6 +176,12 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         if(gamepad2.b && gamepad2.left_stick_button && endgame)
             droneLaunchState = true;
 
+        if(gamepad1.left_bumper) {
+            SPEED_MULTIPLIER = 1.7;
+        }
+        if(gamepad1.right_bumper) {
+            SPEED_MULTIPLIER = 0.6;
+        }
     }
 
     private void hopperUpdate() {
@@ -190,12 +200,12 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private void intakeUpdate()
     {
         if (intakeRunning) {
-            intake.setIntakePower(-0.5);
+            intakeLift.setIntakeLiftPower(-0.5);
             telemetry.addLine("Intake running");
         }
         else
         {
-            intake.setIntakePower(-0.5);
+            intakeLift.setIntakeLiftPower(-0.5);
             telemetry.addLine("Intake stopped");
         }
         telemetry.update();
@@ -240,7 +250,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
 
     private void drivebaseUpdate()
     {
-        double translateSpeed = Math.hypot(joystickTranslateX, joystickTranslateY);
+        double translateSpeed = Math.hypot(joystickTranslateX, joystickTranslateY) * SPEED_MULTIPLIER;
         //Heading 0 = forward, -ve right, +ve left
         double heading = Math.atan2(-joystickTranslateX, -joystickTranslateY);
 
