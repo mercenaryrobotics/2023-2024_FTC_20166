@@ -32,7 +32,7 @@ import java.lang.Math;
 
 public class SubSystemDrivetrain {
     //Which robot are we on? Hubs are mounted different on A & B
-    private int currentBot = 0;//0 = New robot, 1 = Original robot
+    private int currentBot = 1;//0 = New robot, 1 = Original robot
     // Instantiate the drivetrain motor variables
     private DcMotorEx frontLeftDrive;
     private DcMotorEx frontRightDrive;
