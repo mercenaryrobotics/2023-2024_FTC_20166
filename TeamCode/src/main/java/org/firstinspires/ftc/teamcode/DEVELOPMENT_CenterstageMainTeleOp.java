@@ -19,6 +19,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
 //@Disabled
 public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
+    private boolean endgame = false;//Set true to eliminate endgame protection
     private static double SPEED_MULTIPLIER = 1.2;
     private ElapsedTime pauseTimer = new ElapsedTime();
     private double pauseTimerDelay = 0;
@@ -26,7 +27,6 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private boolean hangLiftHang = false;
     private boolean hangLiftDrop = false;
 
-    private boolean endgame = false;
     public FtcDashboard dashboard;
     private boolean hopperOpenManual = false;
     private boolean hopperOpenAuto = false;
@@ -179,8 +179,11 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
         if(gamepad1.left_bumper) {
             SPEED_MULTIPLIER = 1.7;
         }
-        if(gamepad1.right_bumper) {
+        else if(gamepad1.right_bumper) {
             SPEED_MULTIPLIER = 0.6;
+        }
+        else {
+            SPEED_MULTIPLIER = 1.2;
         }
     }
 

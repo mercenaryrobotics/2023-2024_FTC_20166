@@ -32,7 +32,7 @@ import java.lang.Math;
 
 public class SubSystemDrivetrain {
     //Which robot are we on? Hubs are mounted different on A & B
-    private int currentBot = 1;//0 = Robot A, 1 = Robot B
+    private int currentBot = 0;//0 = New robot, 1 = Original robot
     // Instantiate the drivetrain motor variables
     private DcMotorEx frontLeftDrive;
     private DcMotorEx frontRightDrive;
@@ -83,8 +83,8 @@ public class SubSystemDrivetrain {
 
         if (currentBot == 0) {
             IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                    RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
-                    RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                    RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                    RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
                 )
             );
         }

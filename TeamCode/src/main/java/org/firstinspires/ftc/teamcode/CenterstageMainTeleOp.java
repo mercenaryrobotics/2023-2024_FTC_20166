@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemClawArm;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDroneLaunch;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
-import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
+//import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
 @TeleOp
 @Config
@@ -44,7 +44,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private boolean driveModeChangeButton = false;
 
     private SubSystemDrivetrain drivetrain=null;
-    private SubSystemIntakeLift intakeLift = null;
+ //   private SubSystemIntakeLift intakeLift = null;
     private SubSystemHangLift hangLift = null;
     private SubSystemClaw claw = null;
     private SubSystemDroneLaunch drone = null;
@@ -74,7 +74,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     public void initHardware() throws InterruptedException {
         drivetrain = new SubSystemDrivetrain(hardwareMap);
         //drivetrain.resetGyro();
-        intakeLift = new SubSystemIntakeLift(hardwareMap);
+//        intakeLift = new SubSystemIntakeLift(hardwareMap);
         hangLift   = new SubSystemHangLift(hardwareMap);
         clawArm    = new SubSystemClawArm(hardwareMap);
         claw       = new SubSystemClaw(hardwareMap);
@@ -116,7 +116,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private void disableHardware() {
 
         drivetrain.disableDrivetrainMotors();
-        intakeLift.setIntakeLiftPower(SubSystemVariables.INTAKE_LIFT_POWER);
+        //intakeLift.setIntakeLiftPower(SubSystemVariables.INTAKE_LIFT_POWER);
         hangLift.setHangLiftPower(0);
     }
 
@@ -243,27 +243,27 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private void intakeLiftUpdate() {
         if(intakeLiftPosition == 0) {
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_0);
-            intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_0);
+            //intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_0);
             liftpos = SubSystemVariables.INTAKE_LIFT_POS_1;
-            intakeLift.setIntakeLiftPower(1);
+            //intakeLift.setIntakeLiftPower(1);
         }
         else if(intakeLiftPosition == 1) {
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_1);
-            intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_1);
+            //intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_1);
             liftpos = SubSystemVariables.INTAKE_LIFT_POS_1;
-            intakeLift.setIntakeLiftPower(1);
+            //intakeLift.setIntakeLiftPower(1);
         }
         else if(intakeLiftPosition == 2) {
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
-            intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_2);
+            //intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_2);
             liftpos = SubSystemVariables.INTAKE_LIFT_POS_2;
-            intakeLift.setIntakeLiftPower(1);
+            //intakeLift.setIntakeLiftPower(1);
         }
         else if(intakeLiftPosition == 3) {
             clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_3);
-            intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_3);
+            //intakeLift.setLiftPosition(SubSystemVariables.INTAKE_LIFT_POS_3);
             liftpos = SubSystemVariables.INTAKE_LIFT_POS_3;
-            intakeLift.setIntakeLiftPower(1);
+            //intakeLift.setIntakeLiftPower(1);
         }
     }
 
