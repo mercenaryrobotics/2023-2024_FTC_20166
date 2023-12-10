@@ -206,7 +206,7 @@ public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
 
         clawArm    = new SubSystemClawArm(hardwareMap);
         claw       = new SubSystemClaw(hardwareMap);
-        driveTerrain = new SubSystemDrivetrain(hardwareMap);
+        driveTerrain = new SubSystemDrivetrain(hardwareMap, SubSystemVariables.currentBot);
 
         leftDistanceSensor = hardwareMap.get(DistanceSensor.class, "leftDistanceSensor");
         rightDistanceSensor = hardwareMap.get(DistanceSensor.class, "rightDistanceSensor");

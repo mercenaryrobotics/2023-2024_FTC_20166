@@ -32,7 +32,6 @@ import java.lang.Math;
 
 public class SubSystemDrivetrain {
     //Which robot are we on? Hubs are mounted different on A & B
-    private int currentBot = 1;//0 = New robot, 1 = Original robot
     // Instantiate the drivetrain motor variables
     private DcMotorEx frontLeftDrive;
     private DcMotorEx frontRightDrive;
@@ -52,7 +51,7 @@ public class SubSystemDrivetrain {
     static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable
     static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable4
 
-    public SubSystemDrivetrain(HardwareMap hardwareMap) throws InterruptedException {                 // Motor Mapping
+    public SubSystemDrivetrain(HardwareMap hardwareMap, int currentBot) throws InterruptedException {                 // Motor Mapping
         // Initialize the motor hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).

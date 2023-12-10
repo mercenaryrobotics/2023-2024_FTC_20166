@@ -22,11 +22,11 @@ public class SubSystemDroneLaunch {
         drone.setPosition(.65);
     }
 
-    public void launchDrone() {
-        if(CenterstageMainTeleOp.droneLaunchState) {
+    public void launchDrone(boolean doLaunch) {
+        if(doLaunch) {
             drone.setPosition(SubSystemVariables.droneLaunchVal);
         } else {
-            drone.setPosition(.71);
+            drone.setPosition(SubSystemVariables.droneNoLaunchVal);
         }
     }
 

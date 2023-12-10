@@ -70,7 +70,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private boolean droneLaunchState = false;
 
     public void initHardware() throws InterruptedException {
-        drivetrain       = new SubSystemDrivetrain(hardwareMap);
+        drivetrain       = new SubSystemDrivetrain(hardwareMap,SubSystemVariables.currentBot);
         //intake           = new SubSystemIntake(hardwareMap);
         hangLift         = new SubSystemHangLift(hardwareMap);
         hopper           = new SubSystemHopper(hardwareMap);
@@ -281,7 +281,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private void droneUpdate()
     {
         if (droneLaunchState)
-            drone.launchDrone();
+            drone.launchDrone(droneLaunchState);
     }
 
     private boolean robotIsFacingBackdrop(double margin){

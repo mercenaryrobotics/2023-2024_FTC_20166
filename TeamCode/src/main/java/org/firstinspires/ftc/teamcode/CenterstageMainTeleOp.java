@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemClawArm;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDroneLaunch;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntake;
 //import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
 @TeleOp
@@ -28,7 +29,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private boolean togglePressed;
     private boolean lastTogglePressed;
     private boolean hangLiftDrop;
-    private boolean endgame = false;
+    private boolean okayDoEndGame = !SubSystemVariables.protectEndgame;
 
     public FtcDashboard dashboard;
     private IMU imu;
@@ -46,6 +47,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private SubSystemDrivetrain drivetrain=null;
  //   private SubSystemIntakeLift intakeLift = null;
     private SubSystemHangLift hangLift = null;
+    private SubSystemIntake intake = null;
     private SubSystemClaw claw = null;
     private SubSystemDroneLaunch drone = null;
 
@@ -57,6 +59,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
     private boolean hangRelease = false;
     private double hangLiftControl = 0.0;
+    private int intakeDirection = 0;
 
     private double joystick1LeftXOffset = 0.0;
     private double joystick1LeftYOffset = 0.0;
@@ -72,13 +75,23 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     public static boolean droneLaunchState = false;
 
     public void initHardware() throws InterruptedException {
-        drivetrain = new SubSystemDrivetrain(hardwareMap);
+        drivetrain = new SubSystemDrivetrain(hardwareMap, SubSystemVariables.currentBot);
         //drivetrain.resetGyro();
 //        intakeLift = new SubSystemIntakeLift(hardwareMap);
         hangLift   = new SubSystemHangLift(hardwareMap);
         clawArm    = new SubSystemClawArm(hardwareMap);
         claw       = new SubSystemClaw(hardwareMap);
         drone      = new SubSystemDroneLaunch(hardwareMap);
+        intake = new SubSystemIntake(hardwareMap);
+
+        clawClosed = false;
+        okayDoEndGame = !SubSystemVariables.protectEndgame;
+        hangLiftHang = false;
+        FieldCentric = true;
+        lastButtonState = false;
+        driveModeChangeButton = false;
+        hangRelease = false;
+        droneLaunchState = false;
 
         gamepadsReset();
     }
@@ -95,18 +108,13 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
         while (!(isStarted() || isStopRequested())) {
             if(gamepad1.right_bumper && gamepad1.right_trigger > 0.5 && gamepad1.start && gamepad2.right_bumper && gamepad2.right_trigger > 0.5 && gamepad2.start) {
-                imu.resetYaw();
+                drivetrain.resetGyro();
             }
-
-            telemetry.addData("Iniyann is the greatest programmer ", "and the best driver alive");
-
-            telemetry.update();
+            if (gamepad1.x && gamepad1.y && gamepad1.a && gamepad1.b)
+            {
+                drivetrain.resetGyro();
+            }
             idle();
-
-
-
-
-            
         }
     }
 
@@ -123,18 +131,18 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     private void gamepadsReset()
     {
         //Measure 'at rest' joystick positions
-        joystick1LeftXOffset = gamepad1.left_stick_x;
-        joystick1RightXOffset = gamepad1.right_stick_x;
+        joystick1LeftXOffset = 0;//gamepad1.left_stick_x;
+        joystick1RightXOffset = 0;//gamepad1.right_stick_x;
 
-        joystick1LeftYOffset = gamepad1.left_stick_y;
-        joystick1RightYOffset = gamepad1.right_stick_y;
+        joystick1LeftYOffset = 0;//gamepad1.left_stick_y;
+        joystick1RightYOffset = 0;//gamepad1.right_stick_y;
 
 
-        joystick2LeftXOffset = gamepad2.left_stick_x;
-        joystick2RightXOffset = gamepad2.right_stick_x;
+        joystick2LeftXOffset = 0;//gamepad2.left_stick_x;
+        joystick2RightXOffset = 0;//gamepad2.right_stick_x;
 
-        joystick2LeftYOffset = gamepad2.left_stick_y;
-        joystick2RightYOffset = gamepad2.right_stick_y;
+        joystick2LeftYOffset = 0;//gamepad2.left_stick_y;
+        joystick2RightYOffset = 0;//gamepad2.right_stick_y;
     }
 
     public void initializeDashboard() {
@@ -195,25 +203,35 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
         lastTogglePressed = togglePressed;
 
-        if(gamepad2.b && gamepad2.left_stick_button && endgame) {
+        if(gamepad2.b && gamepad2.left_stick_button && okayDoEndGame) {
             droneLaunchState = true;
         }
 
+        if (gamepad2.a)
+            intakeDirection = 1;
+        else if (gamepad2.y)
+            intakeDirection = -1;
+        else
+            intakeDirection = 0;
+
         driveModeChangeButton = gamepad1.x;
 
-        if (gamepad1.b && gamepad1.dpad_right && endgame)
+        if (gamepad1.b && gamepad1.dpad_right && okayDoEndGame)
             hangRelease = true;
 
         if(gamepad1.left_bumper) {
             SPEED_MULTIPLIER = 1.7;
         }
-        if(gamepad1.right_bumper) {
+        else if(gamepad1.right_bumper) {
             SPEED_MULTIPLIER = 0.6;
         }
-
-        if(!gamepad1.left_bumper && !gamepad1.right_bumper) {
-            SPEED_MULTIPLIER = 1;
+        else {
+            SPEED_MULTIPLIER = 1.0;
         }
+
+ //       if(!gamepad1.left_bumper && !gamepad1.right_bumper) {
+ //           SPEED_MULTIPLIER = 1;
+ //       }
 
         if(gamepad1.right_bumper && gamepad1.right_trigger > 0.5 && gamepad1.start && gamepad2.right_bumper && gamepad2.right_trigger > 0.5 && gamepad2.start) {
             imu.resetYaw();
@@ -232,6 +250,8 @@ public class CenterstageMainTeleOp extends LinearOpMode {
     {
         telemetry.addData("Timer: ", runtime.seconds() );
         telemetry.addData("Hang release state: ", hangRelease);
+        telemetry.addData("Hang lift position", hangLift.getHangLiftEncoder());
+        telemetry.addData("Drone launch state", droneLaunchState);
         telemetry.addData("front left power ", SubSystemDrivetrain.FLP);
         telemetry.addData("front right power ", SubSystemDrivetrain.FRP);
         telemetry.addData("back left power ", SubSystemDrivetrain.BLP);
@@ -273,21 +293,52 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
     private void hangLiftUpdate()
     {
-         if(hangLiftHang && (hangLift.getHangLiftEncoder() > -5000)) {
-             hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
-             hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() - 150);
-        } else if (hangLiftDrop && (hangLift.getHangLiftEncoder() < 0)) {
-             hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
-             hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() + 150);
+        if (SubSystemVariables.currentBot == 1) //Original robot
+        {
+            if (hangLiftHang && (hangLift.getHangLiftEncoder() > -5000)) {
+                hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
+                hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() - 150);
+            } else if (hangLiftDrop && (hangLift.getHangLiftEncoder() < 0)) {
+                hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
+                hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() + 150);
+            }
+        }
+        else//New robot
+        {
+            if (hangLiftHang && (hangLift.getHangLiftEncoder() < 3500)) {
+                hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
+                hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() + 150);
+            } else if (hangLiftDrop && (hangLift.getHangLiftEncoder() > 0)) {
+                hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_DROP_POWER);
+                hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() - 150);
+            }
         }
          hangLift.SubSystemHangState(hangRelease);
     }
 
     private void droneUpdate()
     {
-        drone.launchDrone();
+        drone.launchDrone(droneLaunchState);
     }
 
+    private void intakeUpdate()
+    {
+        if (intakeDirection == 1)
+        {
+            intake.setIntakeRiserPositionUp(false);
+            intake.setIntakePower(SubSystemVariables.INTAKE_INTAKE_SPEED);
+        }
+        else if (intakeDirection == -1)
+        {
+            intake.setIntakeRiserPositionUp(true);
+            intake.setIntakePower(SubSystemVariables.INTAKE_OUTTAKE_SPEED);
+        }
+        else
+        {
+            intake.setIntakeRiserPositionUp(true);
+            intake.setIntakePower(0);
+        }
+    }
     private void updateSubSystems()
     {
         //Update the intake
@@ -298,6 +349,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         droneUpdate();
         //Updates the claw servo
         clawUpdate();
+        intakeUpdate();
     }
 
     private void doTeleop()
@@ -305,7 +357,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         while(opModeIsActive())
         {
             if(runtime.seconds() > 90) {
-                endgame = true;
+                okayDoEndGame = true;
             }
 
             //Update the joystick reading
