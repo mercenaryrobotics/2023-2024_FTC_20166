@@ -19,6 +19,9 @@ public class SubSystemHopper {
         hopperGateServo = hardwareMap.get(Servo.class, "hopperGateServo");      //Sets the names of the hardware on the hardware map
         //Make sure close at the start
         //closeClaw(true);
+
+        openGate(false);
+        setHopperPosition(SubSystemVariables.HOPPER_POS_DOWN);
     }
 
     public void openGate(boolean state) {

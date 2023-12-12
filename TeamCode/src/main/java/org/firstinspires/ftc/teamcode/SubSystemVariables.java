@@ -55,8 +55,8 @@ public class SubSystemVariables {
     public static double HOPPER_POS_2 = 0.8;
     public static double HOPPER_POS_3 = 0.7;
     public static double HOPPER_POS_4 = 0.6;
-    public static double HOPPER_POS_UP = 1.0;
-    public static double HOPPER_POS_DOWN = 0.7;
+    public static double HOPPER_POS_UP = 0.7;
+    public static double HOPPER_POS_DOWN = 1.0;
 
     public static int AUTON_TOP_BACKBOARD_DISTANCE = 38;
     public static int AUTON_BOTTOM_BACKBOARD_DISTANCE = 86;

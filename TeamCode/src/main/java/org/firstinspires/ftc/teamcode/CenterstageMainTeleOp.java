@@ -14,6 +14,8 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemClawArm;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDroneLaunch;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopper;
+import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopperLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntake;
 //import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
@@ -21,8 +23,10 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntake;
 @Config
 //@Disabled
 public class CenterstageMainTeleOp extends LinearOpMode {
+    private static final double TURN_SPEED = 0.2;
+    private static final double DRIVE_SPEED = 0.4;
     public static double SPEED_MULTIPLIER = 1.2;
-    private ElapsedTime runtime     = new ElapsedTime();
+    private ElapsedTime pauseTimer = new ElapsedTime();
     private boolean hangLiftHang = false;
     private int intakeLiftPosition = 0;
     private boolean clawClosed = false;
@@ -33,6 +37,21 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
     public FtcDashboard dashboard;
     private IMU imu;
+    private SubSystemHopper hopper;
+    private SubSystemHopperLift hopperLift;
+    private boolean doAutoDropPixel = false;
+    private double targetHeading = 0.0;
+    private double pauseTimerDelay = 0;
+    private boolean hopperOpenManual = false;
+    private boolean hopperOpenAuto = false;
+    private boolean hopperExtendManual = false;
+    private boolean hopperExtendAuto = false;
+    private int hopperLiftPosition;
+    private double hopperLiftSpeed = 0.78;
+
+    private enum BACKDROP_ASSIST_STATE {ASSIST_WAIT, ASSIST_ROTATE, ASSIST_APPROACH, ASSIST_RAISE, ASSIST_DROP, ASSIST_RETRACT, ASSIST_PAUSE, ASSIST_DONE}
+    private BACKDROP_ASSIST_STATE backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_WAIT;
+    private BACKDROP_ASSIST_STATE backdropAssistStateReturn = BACKDROP_ASSIST_STATE.ASSIST_WAIT;
 
 
     private enum ALLIANCE_COLOR {RED, BLUE}
@@ -82,7 +101,9 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         clawArm    = new SubSystemClawArm(hardwareMap);
         claw       = new SubSystemClaw(hardwareMap);
         drone      = new SubSystemDroneLaunch(hardwareMap);
-        intake = new SubSystemIntake(hardwareMap);
+        intake     = new SubSystemIntake(hardwareMap);
+        hopper     = new SubSystemHopper(hardwareMap);
+        hopperLift = new SubSystemHopperLift(hardwareMap);
 
         clawClosed = false;
         okayDoEndGame = !SubSystemVariables.protectEndgame;
@@ -92,6 +113,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         driveModeChangeButton = false;
         hangRelease = false;
         droneLaunchState = false;
+        hopperLiftPosition = 0;
 
         gamepadsReset();
     }
@@ -110,8 +132,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             if(gamepad1.right_bumper && gamepad1.right_trigger > 0.5 && gamepad1.start && gamepad2.right_bumper && gamepad2.right_trigger > 0.5 && gamepad2.start) {
                 drivetrain.resetGyro();
             }
-            if (gamepad1.x && gamepad1.y && gamepad1.a && gamepad1.b)
-            {
+            if ((gamepad1.x && gamepad1.y && gamepad1.a && gamepad1.b)) {
                 drivetrain.resetGyro();
             }
             idle();
@@ -168,7 +189,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         } else {
             hangLiftDrop = false;
         }
-
+        /*
         if(gamepad2.dpad_down) {
             intakeLiftPosition = 1;
         }
@@ -180,6 +201,13 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         }
         if(gamepad2.dpad_up) {
             intakeLiftPosition = 0;
+        }
+         */
+
+        if(gamepad2.dpad_right) {
+           hopperOpenManual = true;
+        } else {
+            hopperOpenManual = false;
         }
 
 
@@ -229,6 +257,12 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             SPEED_MULTIPLIER = 1.0;
         }
 
+        if(gamepad2.dpad_up) {
+            hopperExtendManual = true;
+        } else {
+            hopperExtendManual = false;
+        }
+
  //       if(!gamepad1.left_bumper && !gamepad1.right_bumper) {
  //           SPEED_MULTIPLIER = 1;
  //       }
@@ -236,6 +270,11 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         if(gamepad1.right_bumper && gamepad1.right_trigger > 0.5 && gamepad1.start && gamepad2.right_bumper && gamepad2.right_trigger > 0.5 && gamepad2.start) {
             imu.resetYaw();
         }
+
+        if (gamepad2.start)
+            doAutoDropPixel = true;
+        else
+            doAutoDropPixel = false;
      }
     private void drivebaseUpdate()
     {
@@ -248,17 +287,168 @@ public class CenterstageMainTeleOp extends LinearOpMode {
 
     private void telemetryUpdate()
     {
-        telemetry.addData("Timer: ", runtime.seconds() );
+        telemetry.addData("Timer: ", pauseTimer.seconds() );
         telemetry.addData("Hang release state: ", hangRelease);
         telemetry.addData("Hang lift position", hangLift.getHangLiftEncoder());
         telemetry.addData("Drone launch state", droneLaunchState);
+        /*
         telemetry.addData("front left power ", SubSystemDrivetrain.FLP);
         telemetry.addData("front right power ", SubSystemDrivetrain.FRP);
         telemetry.addData("back left power ", SubSystemDrivetrain.BLP);
         telemetry.addData("back right power ", SubSystemDrivetrain.BRP);
+         */
+
+        telemetry.addData("Front distance sensor val: ", drivetrain.getFrontDistanceSensor());
+        telemetry.addData("State: ", backdropAssistState);
         telemetry.update();
     }
 
+    private boolean robotIsFacingBackdrop(double margin){
+        //Is the robot facing the backdrop (ish)?
+        //Within the specified error angle of the backdrop?
+        //Make read and blue the same. Technically this would also allow the bot to face away
+        //from the backdrop, but good enough for the moment
+        double currentAbsHeading = Math.abs(drivetrain.getCurrentHeading(false));//Result in degrees
+        //Robot heading is 90 degrees rotated to the 'field' 0 heading
+        if (Math.abs((currentAbsHeading - 90)) < margin)
+            return true;
+        else
+            return false;
+    }
+    private void processDropAssistWait(){
+        //Waiting for the robot to be in the 'safe' place and the driver to say "go"
+        //If yes then move to the rotate state
+        if (robotIsFacingBackdrop(20) && doAutoDropPixel && (pauseTimer.time() > 2.0)) {
+            backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_ROTATE;
+            if (drivetrain.getCurrentHeading(false) > 0) //Positive implies we were blue and rotated CCW
+                targetHeading = 90;//Note, at the moment the heading is robot centric
+            else
+                targetHeading = -90;//Note, at the moment the heading is robot centric
+        }
+    }
+
+    private void processDropAssistRotate() {
+        //If still pressing the auto assist then keep rotating until facing the backdrop
+        if (doAutoDropPixel){
+            if (robotIsFacingBackdrop(3)){//Within 3 degrees?
+                //Facing the backdrop so move to approach state
+                drivetrain.disableDrivetrainMotors();
+                backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_APPROACH;
+                //ToDo : Should we move the 'lift' and 'extend" here too to speed things up?
+                //We could start a timer so we know how long we have allowed the lift and servo to be active since can use run to position
+            }
+            else {
+                //Not aligned so keep rotating
+                drivetrain.turnHeading(TURN_SPEED, targetHeading);
+            }
+        }
+        else {
+            //Not holding "auto assist" button so exit
+            //ToDo : Is there anything else we should do, or just drop out?
+            backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_WAIT;
+        }
+    }
+
+    private void processDropAssistApproach(){
+        //If still pressing the auto assist then keep approaching the backdrop
+        if (doAutoDropPixel) {
+            double backdropDistance = drivetrain.getFrontDistanceSensor();
+            if (backdropDistance > 20)//ToDo : Make this drive proportional to the distance away?
+                drivetrain.driveHeading(DRIVE_SPEED, TURN_SPEED, targetHeading);
+            else
+                backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_RAISE;
+        }
+        else
+            //Not holding "auto assist" button so exit
+            //ToDo : Is there anything else we should do, or just drop out?
+            backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_WAIT;
+    }
+
+    private void processDropAssistRaise(){
+        //Start the lift going up, extending the hopper and a timer so we can ensure things are done before opening the gate
+        //ToDo : Dynamic height
+        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_2);
+        hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_UP);
+        //Set a timer
+        pauseTimer.reset();
+        pauseTimerDelay = 0.2;
+        backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_PAUSE;
+        backdropAssistStateReturn = BACKDROP_ASSIST_STATE.ASSIST_DROP;
+    }
+
+    private void processDropAssistPause(){
+        if (pauseTimer.time() > pauseTimerDelay)
+            //Pause has expired so return to desired state
+            backdropAssistState = backdropAssistStateReturn;
+    }
+
+    private void processDropAssistDrop(){
+        hopper.openGate(true);
+        pauseTimer.reset();
+        pauseTimerDelay = 0.2;
+        backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_PAUSE;
+        backdropAssistStateReturn = BACKDROP_ASSIST_STATE.ASSIST_RETRACT;
+    }
+
+    private void processDropAssistRetract(){
+        //If still pressing the auto assist then keep backing away from the backdrop
+        if (doAutoDropPixel) {
+            double backdropDistance = drivetrain.getFrontDistanceSensor();
+            if (backdropDistance < 50)
+                drivetrain.driveHeading(DRIVE_SPEED, TURN_SPEED, targetHeading);
+            else
+                backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_DONE;
+        }
+        else
+            //Not holding "auto assist" button so exit, cleaning up as necessary
+            backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_DONE;
+    }
+
+    private void processDropAssistDone(){
+        hopper.openGate(false);
+        hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_DOWN);
+        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1);
+        //Use the timer to make sure that we don't immediately start dropping a pixel again if we don't let go of the button !!
+        //Don't call the pause state though so that we can manually move around now
+        pauseTimer.reset();
+        backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_WAIT;
+    }
+
+    private void pixelDropAssistUpdate(){
+        switch (backdropAssistState){
+            case ASSIST_WAIT:{
+                processDropAssistWait();
+                break;
+            }
+            case ASSIST_ROTATE:{
+                processDropAssistRotate();
+                break;
+            }
+            case ASSIST_APPROACH: {
+                processDropAssistApproach();
+                break;
+            }
+            case ASSIST_RAISE:{
+                processDropAssistRaise();
+                break;
+            }
+            case ASSIST_PAUSE:{
+                processDropAssistPause();
+                break;
+            }
+            case ASSIST_DROP:{
+                processDropAssistDrop();
+                break;
+            }
+            case ASSIST_RETRACT:{
+                processDropAssistRetract();
+                break;
+            }
+            case ASSIST_DONE:{
+                processDropAssistDone();
+            }
+        }
+    }
 
     private void intakeLiftUpdate() {
         if(intakeLiftPosition == 0) {
@@ -305,7 +495,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         }
         else//New robot
         {
-            if (hangLiftHang && (hangLift.getHangLiftEncoder() < 3500)) {
+            if (hangLiftHang && (hangLift.getHangLiftEncoder() < 5000)) {
                 hangLift.setHangLiftPower(SubSystemVariables.HANG_LIFT_HANG_POWER);
                 hangLift.setHangLiftPos(hangLift.getHangLiftEncoder() + 150);
             } else if (hangLiftDrop && (hangLift.getHangLiftEncoder() > 0)) {
@@ -349,21 +539,61 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         droneUpdate();
         //Updates the claw servo
         clawUpdate();
-        intakeUpdate();
+
+        if (!doAutoDropPixel) {//Only process the driver/operator joystick actions if NOT running auto assist
+            //Updates the hopper gate and hopper positions
+            intakeUpdate();
+            //Updates the hopper lift position
+            hopperUpdate();
+
+            hopperLiftUpdate();
+
+        }
+
+    }
+
+    private void hopperLiftUpdate() {
+       /*
+        //For the moment just use the triggers to move the hopper lift up/down
+        if ((hopperLiftSpeed > 0.1) && (hopperLift.getLiftPosition() < SubSystemVariables.HOPPER_LIFT_POS_MAX)){
+            hopperLift.setHopperLiftPower(hopperLiftSpeed);
+            hopperLift.setHopperLiftPosition(hopperLift.getLiftPosition() + 150);
+        }
+        else if ((hopperLiftSpeed < -0.1) && (hopperLift.getLiftPosition() > SubSystemVariables.HOPPER_LIFT_POS_MIN)){
+            hopperLift.setHopperLiftPower(hopperLiftSpeed);
+            hopperLift.setHopperLiftPosition(hopperLift.getLiftPosition() - 150);
+        }
+        else {
+            hopperLift.setHopperLiftPower(.5);//Hold the current position at half power
+        }
+        */
+        hopperLift.setHopperLiftPower(hopperLiftSpeed);
+        hopperLift.setHopperLiftPosition(hopperLiftPosition);
+    }
+
+    private void hopperUpdate() {
+        //Pixel gate control
+        hopper.openGate(hopperOpenManual || hopperOpenAuto);
+
+        //Hopper extend position
+        if (hopperExtendManual || hopperExtendAuto){
+            hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_3);
+        }
+        else {
+            hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_1);
+        }
     }
 
     private void doTeleop()
     {
         while(opModeIsActive())
         {
-            if(runtime.seconds() > 90) {
+            if(pauseTimer.seconds() > 90) {
                 okayDoEndGame = true;
             }
 
             //Update the joystick reading
             gamepadsUpdate();
-            //Process the joysticks for drivebase motion
-            drivebaseUpdate();
             //Update lift, claw etc...
             updateSubSystems();
             //Update telemetry
@@ -372,6 +602,11 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             if(driveModeChangeButton && !lastButtonState) {
                 FieldCentric = !FieldCentric;
             }
+
+            pixelDropAssistUpdate();
+            if (!doAutoDropPixel)//Only process the driver joystick actions if NOT running auto assist
+                //Process the joysticks for drivebase motion
+                drivebaseUpdate();
 
             lastButtonState = driveModeChangeButton;
         }
@@ -391,7 +626,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         //sleep(200);
         updateSubSystems();
         waitStart();
-        runtime.reset();
+        pauseTimer.reset();
 
         doTeleop();
 
