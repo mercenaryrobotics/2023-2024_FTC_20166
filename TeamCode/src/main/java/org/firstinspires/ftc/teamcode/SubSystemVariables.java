@@ -5,7 +5,7 @@ import com.acmerobotics.dashboard.config.Config;
 @Config
 public class SubSystemVariables {
 
-    public static int currentBot = 0;//0 = New robot, 1 = Original robot
+    public static int currentBot = 1;//0 = New robot, 1 = Original robot
 
     public static boolean protectEndgame = false;
     public static int headingToBackboard;

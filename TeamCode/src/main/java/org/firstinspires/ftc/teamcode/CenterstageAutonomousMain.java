@@ -283,7 +283,7 @@ public class CenterstageAutonomousMain extends LinearOpMode {
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-            ParkDistance = 24;
+            ParkDistance = 19;//Was 24
         }
     }
 

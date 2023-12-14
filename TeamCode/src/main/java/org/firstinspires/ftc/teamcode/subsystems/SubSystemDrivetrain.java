@@ -27,6 +27,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.SubSystemVariables;
 
 import java.lang.Math;
 
@@ -75,7 +76,8 @@ public class SubSystemDrivetrain {
         resetEncoders();
 
         //Front distance sensor
-        frontDistanceSensor = hardwareMap.get(DistanceSensor.class, "frontDistanceSensor");
+        if (currentBot == 0)
+            frontDistanceSensor = hardwareMap.get(DistanceSensor.class, "frontDistanceSensor");
 
         //IMU
         imu = hardwareMap.get(IMU.class, "imu");

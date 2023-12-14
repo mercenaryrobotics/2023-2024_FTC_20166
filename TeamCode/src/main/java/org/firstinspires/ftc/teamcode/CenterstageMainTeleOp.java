@@ -189,27 +189,22 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         } else {
             hangLiftDrop = false;
         }
-        /*
-        if(gamepad2.dpad_down) {
-            intakeLiftPosition = 1;
+
+        if(gamepad2.dpad_up) {
+            intakeLiftPosition = 0;
         }
         if(gamepad2.dpad_left) {
             intakeLiftPosition = 2;
         }
-        if(gamepad2.dpad_right) {
-            intakeLiftPosition = 3;
+        if(gamepad2.dpad_down) {
+            intakeLiftPosition = 1;
         }
-        if(gamepad2.dpad_up) {
-            intakeLiftPosition = 0;
-        }
-         */
 
-        if(gamepad2.dpad_right) {
+        if(gamepad2.x) {
            hopperOpenManual = true;
         } else {
             hopperOpenManual = false;
         }
-
 
         if(gamepad2.left_bumper) {
             clawClosed = false;
@@ -257,7 +252,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             SPEED_MULTIPLIER = 1.0;
         }
 
-        if(gamepad2.dpad_up) {
+        if(gamepad2.dpad_right) {
             hopperExtendManual = true;
         } else {
             hopperExtendManual = false;
@@ -271,7 +266,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             imu.resetYaw();
         }
 
-        if (gamepad2.start)
+        if( (gamepad2.start) && (SubSystemVariables.currentBot == 0))
             doAutoDropPixel = true;
         else
             doAutoDropPixel = false;
@@ -297,9 +292,10 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         telemetry.addData("back left power ", SubSystemDrivetrain.BLP);
         telemetry.addData("back right power ", SubSystemDrivetrain.BRP);
          */
-
-        telemetry.addData("Front distance sensor val: ", drivetrain.getFrontDistanceSensor());
-        telemetry.addData("State: ", backdropAssistState);
+        if (SubSystemVariables.currentBot == 0) {
+            telemetry.addData("Front distance sensor val: ", drivetrain.getFrontDistanceSensor());
+            telemetry.addData("State: ", backdropAssistState);
+        }
         telemetry.update();
     }
 
@@ -600,10 +596,10 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             telemetryUpdate();
 
             if(driveModeChangeButton && !lastButtonState) {
-                FieldCentric = !FieldCentric;
+     //           FieldCentric = !FieldCentric;
             }
-
-            pixelDropAssistUpdate();
+            if (SubSystemVariables.currentBot == 0)
+                pixelDropAssistUpdate();
             if (!doAutoDropPixel)//Only process the driver joystick actions if NOT running auto assist
                 //Process the joysticks for drivebase motion
                 drivebaseUpdate();
