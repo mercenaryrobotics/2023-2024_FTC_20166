@@ -5,7 +5,7 @@ import com.acmerobotics.dashboard.config.Config;
 @Config
 public class SubSystemVariables {
 
-    public static int currentBot = 1;//0 = New robot, 1 = Original robot
+    public static int currentBot = 0;//0 = New robot, 1 = Original robot
 
     public static boolean protectEndgame = false;
     public static int headingToBackboard;
@@ -14,8 +14,8 @@ public class SubSystemVariables {
     public static final int INTAKE_LIFT_POS_1 = 5;
     public static final int INTAKE_LIFT_POS_2 = 0;
     public static final int INTAKE_LIFT_POS_3 = 800;
-    public static final double INTAKE_INTAKE_SPEED = .8;
-    public static final double INTAKE_OUTTAKE_SPEED = -.4;
+    public static final double INTAKE_INTAKE_SPEED = 1;
+    public static final double INTAKE_OUTTAKE_SPEED = -.6;
 
     public static final double CLAW_ARM_POWER_AUTO = 0.3;
     public static final double CLAW_ARM_POWER = 0.6;
