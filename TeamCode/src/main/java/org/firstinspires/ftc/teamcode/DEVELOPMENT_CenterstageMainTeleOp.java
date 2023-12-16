@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -11,7 +10,6 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemDroneLaunch;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHangLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopper;
-import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntake;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemHopperLift;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntakeLift;
 
@@ -348,7 +346,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private void processDropAssistRaise(){
         //Start the lift going up, extending the hopper and a timer so we can ensure things are done before opening the gate
         //ToDo : Dynamic height
-        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_2);
+        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1);
         hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_UP);
         //Set a timer
         pauseTimer.reset();
@@ -388,7 +386,7 @@ public class DEVELOPMENT_CenterstageMainTeleOp extends LinearOpMode {
     private void processDropAssistDone(){
         hopper.openGate(false);
         hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_DOWN);
-        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1);
+        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_DOWN);
         //Use the timer to make sure that we don't immediately start dropping a pixel again if we don't let go of the button !!
         //Don't call the pause state though so that we can manually move around now
         pauseTimer.reset();

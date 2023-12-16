@@ -43,13 +43,12 @@ public class SubSystemVariables {
     public static double HOPPER_GATE_CLOSE = 1;
 
     public static double HOPPER_LIFT_POWER = 0.6;
-    public static int HOPPER_LIFT_POS_1 = 0;
-    public static int HOPPER_LIFT_POS_2 = -1300;
-    public static int HOPPER_LIFT_POS_3 = -2500;
-    public static int HOPPER_LIFT_POS_4 = -3000;
+    public static int HOPPER_LIFT_POS_DOWN = 0;
+    public static int HOPPER_LIFT_POS_1 = -1000;
+    public static int HOPPER_LIFT_POS_DELTA = -600;
 
-    public static int HOPPER_LIFT_POS_MAX = -3200;
-    public static int HOPPER_LIFT_POS_MIN = -10;
+    public static int HOPPER_LIFT_POS_MAX = -4200;
+    public static int HOPPER_LIFT_POS_MIN = 0;
 
     public static double HOPPER_POS_1 = 1.0;
     public static double HOPPER_POS_2 = 0.8;

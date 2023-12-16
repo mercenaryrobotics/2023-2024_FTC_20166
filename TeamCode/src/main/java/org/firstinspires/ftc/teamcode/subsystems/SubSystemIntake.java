@@ -9,9 +9,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class SubSystemIntake {
     // Instantiate the drivetrain motor variables
     private DcMotorEx intake;
-    private Servo intakeRiserServo;
+    public static Servo intakeRiserServo;
 
-    public static double riserUpPosition = .5;
+    public static double riserUpPosition = .3;
     public static double riserDownPosition = .7;
 
     public SubSystemIntake(HardwareMap hardwareMap) throws InterruptedException {                 // Motor Mapping
@@ -19,7 +19,7 @@ public class SubSystemIntake {
         intake.setPower(0);
 
         intakeRiserServo = hardwareMap.get(Servo.class, "intakeRiserServo");
-        intakeRiserServo.setPosition(riserUpPosition);
+
     }
 
     public void setIntakePower(double speed) {
