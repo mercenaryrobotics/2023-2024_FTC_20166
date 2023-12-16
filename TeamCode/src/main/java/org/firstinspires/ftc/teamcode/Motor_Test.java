@@ -33,7 +33,7 @@ public class Motor_Test extends LinearOpMode {
     private DcMotorEx frontRightDrive = null;
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
-    private DcMotorEx intakeLift = null;
+//    private DcMotorEx intakeLift = null;
 
     private Servo testServo = null;
     private Servo torqueServo = null;
@@ -41,8 +41,8 @@ public class Motor_Test extends LinearOpMode {
 
     public static double servoMax = 1.0;
     public static double servoMin = 0.0;
-    private int motorToTest = 1;
-    private DcMotorEx hopperLift;
+    private int motorToTest = 2;
+    //private DcMotorEx hopperLift;
     private float powerToSet;
     private SubSystemHopper hopperServo;
     private boolean hangRelease;
@@ -57,8 +57,8 @@ public class Motor_Test extends LinearOpMode {
         frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightDrive");
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftDrive");
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightDrive");
-        intakeLift = hardwareMap.get(DcMotorEx.class, "intakeLift");
-        hopperLift = hardwareMap.get(DcMotorEx.class, "hopperLift");
+       // intakeLift = hardwareMap.get(DcMotorEx.class, "intakeLift");
+        //hopperLift = hardwareMap.get(DcMotorEx.class, "hopperLift");
         hangMotor = hardwareMap.get(DcMotorEx.class, "hangLift");
 
         frontRightDrive.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -68,16 +68,16 @@ public class Motor_Test extends LinearOpMode {
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        intakeLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hopperLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+       // intakeLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //hopperLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         hangMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        intakeLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        hopperLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+       // intakeLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //hopperLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         hangMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frontLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -91,7 +91,7 @@ public class Motor_Test extends LinearOpMode {
 
 
         testServo = hardwareMap.get(Servo.class, "hopperGateServo");
-        torqueServo = hardwareMap.get(Servo.class, "torqueServo");
+        //torqueServo = hardwareMap.get(Servo.class, "torqueServo");
         HOPPER_SERVO_OLD = hardwareMap.get(Servo.class, "hopperServo");
         hopperServo = new SubSystemHopper(hardwareMap);
         //hangLift = new SubSystemHangLift(hardwareMap);
@@ -147,8 +147,8 @@ public class Motor_Test extends LinearOpMode {
         telemetry.addLine("Iniyann is the greatest programmer in the world");
         telemetry.addData("Motor (intake is true, hopper is false)", motorToTest);
 
-        telemetry.addData("Motor 1 encoder: ", intakeLift.getCurrentPosition());
-        telemetry.addData("Motor 2 encoder: ", hopperLift.getCurrentPosition());
+        //telemetry.addData("Motor 1 encoder: ", intakeLift.getCurrentPosition());
+        //telemetry.addData("Motor 2 encoder: ", hopperLift.getCurrentPosition());
         telemetry.addData("Motor 3 encoder: ", hangMotor.getCurrentPosition());
         telemetry.update();
     }
@@ -169,9 +169,9 @@ public class Motor_Test extends LinearOpMode {
 
     private void updateTestMotors() {
         if(motorToTest == 1) {
-            intakeLift.setPower(powerToSet);
+           // intakeLift.setPower(powerToSet);
             hangMotor.setPower(0);
-            hopperLift.setPower(0);
+            //hopperLift.setPower(0);
             frontLeftDrive.setPower(0);
             frontRightDrive.setPower(0);
             backLeftDrive.setPower(0);
@@ -179,18 +179,18 @@ public class Motor_Test extends LinearOpMode {
         }
 
         if(motorToTest == 2) {
-            intakeLift.setPower(0);
+           // intakeLift.setPower(0);
             hangMotor.setPower(powerToSet);
-            hopperLift.setPower(0);
+            //hopperLift.setPower(0);
             frontLeftDrive.setPower(0);
             frontRightDrive.setPower(0);
             backLeftDrive.setPower(0);
             backRightDrive.setPower(0);
         }
         if(motorToTest == 3) {
-            intakeLift.setPower(0);
+           // intakeLift.setPower(0);
             hangMotor.setPower(0);
-            hopperLift.setPower(powerToSet);
+            //hopperLift.setPower(powerToSet);
             frontLeftDrive.setPower(0);
             frontRightDrive.setPower(0);
             backLeftDrive.setPower(0);
@@ -198,9 +198,9 @@ public class Motor_Test extends LinearOpMode {
         }
 
         if(motorToTest == 4) {
-            intakeLift.setPower(0);
+           // intakeLift.setPower(0);
             hangMotor.setPower(0);
-            hopperLift.setPower(0);
+            //hopperLift.setPower(0);
             frontLeftDrive.setPower(powerToSet);
             frontRightDrive.setPower(0);
             backLeftDrive.setPower(0);
@@ -208,9 +208,9 @@ public class Motor_Test extends LinearOpMode {
         }
 
         if(motorToTest == 5) {
-            intakeLift.setPower(0);
+          //  intakeLift.setPower(0);
             hangMotor.setPower(0);
-            hopperLift.setPower(0);
+            //hopperLift.setPower(0);
             frontLeftDrive.setPower(0);
             frontRightDrive.setPower(powerToSet);
             backLeftDrive.setPower(0);
@@ -218,9 +218,9 @@ public class Motor_Test extends LinearOpMode {
         }
 
         if(motorToTest == 6) {
-            intakeLift.setPower(0);
+           // intakeLift.setPower(0);
             hangMotor.setPower(0);
-            hopperLift.setPower(0);
+            //hopperLift.setPower(0);
             frontLeftDrive.setPower(0);
             frontRightDrive.setPower(0);
             backLeftDrive.setPower(powerToSet);
@@ -228,9 +228,9 @@ public class Motor_Test extends LinearOpMode {
         }
 
         if(motorToTest == 7) {
-            intakeLift.setPower(0);
+           // intakeLift.setPower(0);
             hangMotor.setPower(0);
-            hopperLift.setPower(0);
+            //hopperLift.setPower(0);
             frontLeftDrive.setPower(0);
             frontRightDrive.setPower(0);
             backLeftDrive.setPower(0);
@@ -274,12 +274,12 @@ public class Motor_Test extends LinearOpMode {
         if (gamepad1.b && gamepad1.dpad_right && endgame)
             hangRelease = true;
 
-        if(gamepad1.dpad_left) {
-            motorToTest++;
-        }
-        if(motorToTest > 7) {
-            motorToTest = 1;
-        }
+//        if(gamepad1.dpad_left) {
+//            motorToTest++;
+//        }
+//        if(motorToTest > 7) {
+//            motorToTest = 1;
+//        }
 
         if(gamepad1.left_trigger > 0.1) {
             powerToSet = gamepad1.left_trigger;

@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.SubSystemVariables.STRAFE_SPEED;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -97,6 +99,15 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemIntake;
 @Autonomous
 //@Disabled
 public class MONKEY_Autonomous extends LinearOpMode {
+    static final double     CORRECTION_FACTOR       = (60.0/58.0);
+    static final double     COUNTS_PER_MOTOR_REV    = 537.7 ;   // eg: GoBILDA 312 RPM Yellow Jacket
+    static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
+    static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
+    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR) /
+            (WHEEL_DIAMETER_INCHES * 3.141592653589);
+    static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0);
+    static final double     COUNTS_PER_INCH_STRAFE         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR_STRAFE) /
+            (WHEEL_DIAMETER_INCHES * 3.1415);
     private boolean isTestBot = true;
 
     /* Declare OpMode members. */
@@ -128,12 +139,7 @@ public class MONKEY_Autonomous extends LinearOpMode {
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
 
-    static final double     CORRECTION_FACTOR       = (60.0/58.0);
-    static final double     COUNTS_PER_MOTOR_REV    = 537.7 ;   // eg: GoBILDA 312 RPM Yellow Jacket
-    static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
-    static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR) /
-            (WHEEL_DIAMETER_INCHES * 3.141592653589);
+
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
@@ -156,14 +162,18 @@ public class MONKEY_Autonomous extends LinearOpMode {
     private final double finishDistancePos3 = 3.0;
     private int propStartingPos = 0;
 
-    private final int SCANNING_DISTANCE = 19;
+    private final int SCANNING_DISTANCE = 16;
     private int ParkDistance;
     private SubSystemIntake intake;
-    private double ADJUST_AFTER_SCAN = 7;
-    private double KNOCK_DISTANCE = 5;
+    private double ADJUST_AFTER_SCAN = 10;
+    private double KNOCK_DISTANCE = 10;
     private SubSystemDrivetrain drivetrain;
     private SubSystemHopperLift hopperLift;
     private SubSystemHopper hopper;
+    private int backLeftTarget;
+    private int backRightTarget;
+    private int frontLeftTarget;
+    private int frontRightTarget;
 
     public void initializeHardware() throws InterruptedException {
         // Initialize the drive system variables.
@@ -243,8 +253,8 @@ public class MONKEY_Autonomous extends LinearOpMode {
         //telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
         telemetry.addData("Parking Position (1 is corner) (change via triggers): ", SubSystemVariables.parkingPos);
         telemetry.addData("Park? (change via bumper) ", SubSystemVariables.parkInBackstage);
-        telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
-        telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
+        //telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
+        //telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
         telemetry.addData("Prop position: ", detectPropDistance());
         telemetry.update();
     }
@@ -331,6 +341,8 @@ public class MONKEY_Autonomous extends LinearOpMode {
             AutonMoveToBackstage();
         }
 
+        sleep(30000);
+
     }
 
     private void AutonMoveToBackstage() {
@@ -345,26 +357,46 @@ public class MONKEY_Autonomous extends LinearOpMode {
     }
 
     private void dropPixelTop() {
+        telemetry.addLine("Dropping pixel on backboard now!!!");
+        telemetry.update();
         hopperLift.setHopperLiftPower(1);
 
-        turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
-        holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
+        if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3)) {
+            driveStraight(DRIVE_SPEED, -10);
+        } else if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 3) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 1)) {
+            driveStraight(DRIVE_SPEED, 10);
+            turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
+        } else {
+            turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
+            holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
+
+
+        }
+
+
+
+
+        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1 - 1200);
+        hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_UP);
+
         while (drivetrain.getFrontDistanceSensor() > 200 && opModeIsActive()) {
+            telemetry.addLine("driving, cant find 200 yet.");
+            telemetry.update();
             drivetrain.driveHeading(-DRIVE_SPEED, TURN_SPEED, -SubSystemVariables.headingToBackboard);
         }
         while (drivetrain.getFrontDistanceSensor() > 70 && opModeIsActive()) {
+            telemetry.addLine("waiting for 70");
+            telemetry.update();
             drivetrain.driveHeading(-DRIVE_SPEED / 2, TURN_SPEED, -SubSystemVariables.headingToBackboard);
         }
 
         drivetrain.driveHeading(0, 0, -SubSystemVariables.headingToBackboard);
 
-        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1);
-        sleep(1000);
-        hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_UP);
-        sleep(500);
         hopper.openGate(true);
 
         sleep(2000);
+        driveStraight(DRIVE_SPEED, 10);
 
         hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_DOWN);
         hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_DOWN);
@@ -372,6 +404,8 @@ public class MONKEY_Autonomous extends LinearOpMode {
     }
 
     private void AutonDistanceDropPixel() {
+        telemetry.addLine("Doing spike marks...");
+        telemetry.update();
         driveStraight(DRIVE_SPEED, SCANNING_DISTANCE);
         propPosition = detectPropDistance();
         processPropPosition(propPosition);
@@ -383,13 +417,22 @@ public class MONKEY_Autonomous extends LinearOpMode {
         holdHeading(speed, currentHeading + angle, 0.5);
     }
 
+    private void knockProp() {
+        driveStraight(DRIVE_SPEED + 0.3, KNOCK_DISTANCE);
+        driveStraight(DRIVE_SPEED, -KNOCK_DISTANCE + 1);
+    }
+
     private void processPropPosition(int position) {
         if(position == 1) {
-            driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
-            rotateBy(TURN_SPEED, 90);
+            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+                Strafe(STRAFE_SPEED, -5);
+                driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
+            } else {
+                driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
+                rotateBy(TURN_SPEED, 90);
+                knockProp();
+            }
 
-            driveStraight(DRIVE_SPEED +0.3, KNOCK_DISTANCE);
-            driveStraight(DRIVE_SPEED, -KNOCK_DISTANCE + 1);
 
             dropPixel();
         } else if (position == 2) {
@@ -399,20 +442,29 @@ public class MONKEY_Autonomous extends LinearOpMode {
             driveStraight(DRIVE_SPEED, -KNOCK_DISTANCE + 1);
 
             dropPixel();
-            driveStraight(DRIVE_SPEED-0.4, 5);
+//            telemetry.addLine("driving forward after dropping pixel");
+//            telemetry.update();
+//            driveStraight(DRIVE_SPEED, 5);
 
         } else /*if (position == 3) */ {
-            driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
-            rotateBy(TURN_SPEED, -90);
 
-            driveStraight(DRIVE_SPEED +0.3, KNOCK_DISTANCE);
-            driveStraight(DRIVE_SPEED, -KNOCK_DISTANCE + 1);
+            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+                Strafe(STRAFE_SPEED, 5);
+                driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
+            } else {
+                driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
+                rotateBy(TURN_SPEED, -90);
+                knockProp();
+            }
+
 
             dropPixel();
         }
     }
 
     private void dropPixel() {
+        telemetry.addLine("dropping pixel on spike mark");
+        telemetry.update();
         intake.setIntakePower(SubSystemVariables.INTAKE_OUTTAKE_SPEED);
         driveStraight(DRIVE_SPEED - 0.5, -5);
         intake.setIntakePower(0);
@@ -425,9 +477,9 @@ public class MONKEY_Autonomous extends LinearOpMode {
         //telemetry.addData("Right Distance: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
         //telemetry.update();
         //}
-        if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 175) {
+        if (leftDistanceSensor.getDistance(DistanceUnit.MM) < 220) {
             return 1;
-        } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 175) {
+        } else if (rightDistanceSensor.getDistance(DistanceUnit.MM) < 220) {
             return 3;
         } else {
             return 2;
@@ -478,6 +530,60 @@ public class MONKEY_Autonomous extends LinearOpMode {
             driveStraight(DRIVE_SPEED, finishDistancePos3);
         }
 
+    }
+
+    private void Strafe(double maxDriveSpeed, double distance) {
+        // Ensure that the OpMode is still active
+        double heading = getHeading();
+        // Determine new target position, and pass to motor controller
+        int moveCounts = (int)(distance * COUNTS_PER_INCH_STRAFE);
+        backLeftTarget = backLeftDrive.getCurrentPosition() - moveCounts;
+        frontLeftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
+        backRightTarget = backRightDrive.getCurrentPosition() - moveCounts;
+        frontRightTarget = frontRightDrive.getCurrentPosition() + moveCounts;
+
+        // Set Target FIRST, then turn on RUN_TO_POSITION
+        frontLeftDrive.setTargetPosition(frontLeftTarget);
+        backLeftDrive.setTargetPosition(backLeftTarget);
+        frontRightDrive.setTargetPosition(backRightTarget);
+        backRightDrive.setTargetPosition(frontRightTarget);
+
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Set the required driving speed  (must be positive for RUN_TO_POSITION)
+        // Start driving straight, and then enter the control loop
+        maxDriveSpeed = Math.abs(maxDriveSpeed);
+        moveRobot(maxDriveSpeed, 0);
+
+        // keep looping while we are still active, and BOTH motors are running.
+        while (/*opModeIsActive() &&
+                (frontLeftDrive.isBusy() &&*/ frontRightDrive.isBusy()) {
+
+            // Determine required steering to keep on heading
+            turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
+
+            // if driving in reverse, the motor correction also needs to be reversed
+            if (distance < 0)
+                turnSpeed *= -1.0;
+
+            // Apply the turning correction to the current driving speed.
+            moveRobot(driveSpeed, turnSpeed);
+
+
+        }
+
+        // Display drive status for the driver.
+        telemetry.addData("Strafing for: ", distance);
+
+        // Stop all motion & Turn off RUN_TO_POSITION
+        moveRobot(0, 0);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
 
@@ -686,20 +792,20 @@ public class MONKEY_Autonomous extends LinearOpMode {
      * @param straight  Set to true if we are driving straight, and the encoder positions should be included in the telemetry.
      */
     private void sendTelemetry(boolean straight) {
-        telemetry.addData("Gyro val: ", imu.getRobotYawPitchRollAngles());
-        if (straight) {
-            telemetry.addData("Motion", "Drive Straight");
-            telemetry.addData("Target Pos L:R",  "%7d:%7d",      leftTarget,  rightTarget);
-            telemetry.addData("Actual Pos L:R",  "%7d:%7d",      frontLeftDrive.getCurrentPosition(),
-                    frontRightDrive.getCurrentPosition());
-        } else {
-            telemetry.addData("Motion", "Turning");
-        }
-
-        telemetry.addData("Heading- Target : Current", "%5.2f : %5.0f", targetHeading, getHeading());
-        telemetry.addData("Error  : Steer Pwr",  "%5.1f : %5.1f", headingError, turnSpeed);
-        telemetry.addData("Wheel Speeds L : R", "%5.2f : %5.2f", leftSpeed, rightSpeed);
-        telemetry.update();
+//        telemetry.addData("Gyro val: ", imu.getRobotYawPitchRollAngles());
+//        if (straight) {
+//            telemetry.addData("Motion", "Drive Straight");
+//            telemetry.addData("Target Pos L:R",  "%7d:%7d",      leftTarget,  rightTarget);
+//            telemetry.addData("Actual Pos L:R",  "%7d:%7d",      frontLeftDrive.getCurrentPosition(),
+//                    frontRightDrive.getCurrentPosition());
+//        } else {
+//            telemetry.addData("Motion", "Turning");
+//        }
+//
+//        telemetry.addData("Heading- Target : Current", "%5.2f : %5.0f", targetHeading, getHeading());
+//        telemetry.addData("Error  : Steer Pwr",  "%5.1f : %5.1f", headingError, turnSpeed);
+//        telemetry.addData("Wheel Speeds L : R", "%5.2f : %5.2f", leftSpeed, rightSpeed);
+//        telemetry.update();
     }
 
     /**
