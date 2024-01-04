@@ -424,7 +424,7 @@ public class MONKEY_Autonomous extends LinearOpMode {
 
     private void processPropPosition(int position) {
         if(position == 1) {
-            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
+            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
                 Strafe(STRAFE_SPEED, -5);
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
             } else {
@@ -448,7 +448,7 @@ public class MONKEY_Autonomous extends LinearOpMode {
 
         } else /*if (position == 3) */ {
 
-            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
                 Strafe(STRAFE_SPEED, 5);
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
             } else {
