@@ -357,8 +357,6 @@ public class MONKEY_Autonomous extends LinearOpMode {
     }
 
     private void dropPixelTop() {
-        telemetry.addLine("Dropping pixel on backboard now!!!");
-        telemetry.update();
         hopperLift.setHopperLiftPower(1);
 
         if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3)) {
@@ -374,30 +372,20 @@ public class MONKEY_Autonomous extends LinearOpMode {
 
         }
 
-
-
-
         hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1 - 1200);
         hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_UP);
 
         while (drivetrain.getFrontDistanceSensor() > 200 && opModeIsActive()) {
-            telemetry.addLine("driving, cant find 200 yet.");
-            telemetry.update();
             drivetrain.driveHeading(-DRIVE_SPEED, TURN_SPEED, -SubSystemVariables.headingToBackboard);
         }
         while (drivetrain.getFrontDistanceSensor() > 70 && opModeIsActive()) {
-            telemetry.addLine("waiting for 70");
-            telemetry.update();
             drivetrain.driveHeading(-DRIVE_SPEED / 2, TURN_SPEED, -SubSystemVariables.headingToBackboard);
         }
 
         drivetrain.driveHeading(0, 0, -SubSystemVariables.headingToBackboard);
-
         hopper.openGate(true);
-
         sleep(2000);
         driveStraight(DRIVE_SPEED, 10);
-
         hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_DOWN);
         hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_DOWN);
         hopper.openGate(false);
@@ -424,17 +412,18 @@ public class MONKEY_Autonomous extends LinearOpMode {
 
     private void processPropPosition(int position) {
         if(position == 1) {
-            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
+            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
                 Strafe(STRAFE_SPEED, -5);
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
+                driveStraight(-DRIVE_SPEED, ADJUST_AFTER_SCAN/2);
             } else {
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
                 rotateBy(TURN_SPEED, 90);
                 knockProp();
             }
 
-
             dropPixel();
+
         } else if (position == 2) {
             driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
 
@@ -442,21 +431,17 @@ public class MONKEY_Autonomous extends LinearOpMode {
             driveStraight(DRIVE_SPEED, -KNOCK_DISTANCE + 1);
 
             dropPixel();
-//            telemetry.addLine("driving forward after dropping pixel");
-//            telemetry.update();
-//            driveStraight(DRIVE_SPEED, 5);
-
         } else /*if (position == 3) */ {
 
-            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
+            if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
                 Strafe(STRAFE_SPEED, 5);
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
+                driveStraight(-DRIVE_SPEED, ADJUST_AFTER_SCAN/2);
             } else {
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
                 rotateBy(TURN_SPEED, -90);
                 knockProp();
             }
-
 
             dropPixel();
         }
@@ -483,51 +468,6 @@ public class MONKEY_Autonomous extends LinearOpMode {
             return 3;
         } else {
             return 2;
-        }
-
-    }
-
-    private int detectProp() {
-        /*
-        if(gamepad1.dpad_left) {
-            propStartingPos = 1;
-        } else if (gamepad1.dpad_up) {
-            propStartingPos = 2;
-        } else if (gamepad1.dpad_right) {
-            propStartingPos = 3;
-        }
-         */
-
-        return 2;
-
-
-    }
-
-    private void AutonSimpleDropPixelCenter(int position) {
-        imu.resetYaw();
-
-        if(position == 1) {
-            driveStraight(DRIVE_SPEED, distanceDropPos1);
-            turnToHeading(TURN_SPEED, 90);
-            holdHeading(TURN_SPEED,  90, 0.5);
-            driveStraight(DRIVE_SPEED, finishDistancePos1);
-
-        } else if (position == 2) {
-            driveStraight(DRIVE_SPEED, distanceDropPos2);
-            //clawArm.setClawArmPosition(0);
-            sleep(1000);
-            //claw.closeClaw(false);
-            sleep(1000);
-            //clawArm.setClawArmPosition(SubSystemVariables.CLAW_ARM_POS_2);
-            driveStraight(DRIVE_SPEED, -4);
-            //clawArm.setClawArmPosition(0);
-            sleep(1000);
-
-        }  else /*if (position == 3)*/ {
-            driveStraight(DRIVE_SPEED, distanceDropPos3);
-            turnToHeading(TURN_SPEED, -90);
-            holdHeading( TURN_SPEED,  -90, 0.5);
-            driveStraight(DRIVE_SPEED, finishDistancePos3);
         }
 
     }
