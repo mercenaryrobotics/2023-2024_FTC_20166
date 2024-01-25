@@ -50,6 +50,7 @@ public class Motor_Test extends LinearOpMode {
     private boolean hangLiftHang;
     private boolean hangLiftDrop;
     private DcMotorEx hangMotor;
+    private boolean pressedOnce = true;
 
     public void initializeHardware() throws InterruptedException {
 
@@ -80,7 +81,7 @@ public class Motor_Test extends LinearOpMode {
         //hopperLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         hangMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        frontLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        //frontLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         //intakeLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //hopperLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -93,7 +94,7 @@ public class Motor_Test extends LinearOpMode {
         testServo = hardwareMap.get(Servo.class, "hopperGateServo");
         //torqueServo = hardwareMap.get(Servo.class, "torqueServo");
         HOPPER_SERVO_OLD = hardwareMap.get(Servo.class, "hopperServo");
-        hopperServo = new SubSystemHopper(hardwareMap);
+        //hopperServo = new SubSystemHopper(hardwareMap);
         //hangLift = new SubSystemHangLift(hardwareMap);
     }
 
@@ -274,12 +275,15 @@ public class Motor_Test extends LinearOpMode {
         if (gamepad1.b && gamepad1.dpad_right && endgame)
             hangRelease = true;
 
-//        if(gamepad1.dpad_left) {
-//            motorToTest++;
-//        }
-//        if(motorToTest > 7) {
-//            motorToTest = 1;
-//        }
+        if(gamepad1.dpad_left && pressedOnce) {
+            motorToTest++;
+            pressedOnce = false;
+        } else if (!gamepad1.dpad_left){
+            pressedOnce = true;
+        }
+        if(motorToTest > 7) {
+            motorToTest = 1;
+        }
 
         if(gamepad1.left_trigger > 0.1) {
             powerToSet = gamepad1.left_trigger;
