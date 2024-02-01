@@ -104,10 +104,10 @@ public class MONKEY_Autonomous extends LinearOpMode {
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR) /
-            (WHEEL_DIAMETER_INCHES * 3.141592653589);
+            (WHEEL_DIAMETER_INCHES * 3.141592653589) * (315.0/415.0);
     static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0);
     static final double     COUNTS_PER_INCH_STRAFE         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR_STRAFE) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
+            (WHEEL_DIAMETER_INCHES * 3.1415) * (315.0/415.0);
     private boolean isTestBot = true;
 
     /* Declare OpMode members. */
