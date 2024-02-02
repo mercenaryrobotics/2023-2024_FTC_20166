@@ -51,6 +51,7 @@ public class Motor_Test extends LinearOpMode {
     private boolean hangLiftDrop;
     private DcMotorEx hangMotor;
     private boolean pressedOnce = true;
+    private DcMotorEx intake;
 
     public void initializeHardware() throws InterruptedException {
 
@@ -60,6 +61,7 @@ public class Motor_Test extends LinearOpMode {
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightDrive");
        // intakeLift = hardwareMap.get(DcMotorEx.class, "intakeLift");
         //hopperLift = hardwareMap.get(DcMotorEx.class, "hopperLift");
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
         hangMotor = hardwareMap.get(DcMotorEx.class, "hangLift");
 
         frontRightDrive.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -69,6 +71,7 @@ public class Motor_Test extends LinearOpMode {
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
        // intakeLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         //hopperLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         hangMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -77,6 +80,7 @@ public class Motor_Test extends LinearOpMode {
         frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
        // intakeLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //hopperLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         hangMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -170,7 +174,7 @@ public class Motor_Test extends LinearOpMode {
 
     private void updateTestMotors() {
         if(motorToTest == 1) {
-           // intakeLift.setPower(powerToSet);
+            intake.setPower(powerToSet);
             hangMotor.setPower(0);
             //hopperLift.setPower(0);
             frontLeftDrive.setPower(0);

@@ -104,10 +104,10 @@ public class MONKEY_Autonomous extends LinearOpMode {
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ; //Possible not accurate*     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR) /
-            (WHEEL_DIAMETER_INCHES * 3.141592653589) * (315.0/415.0);
+            (WHEEL_DIAMETER_INCHES * 3.141592653589) * (315.0/435.0);
     static final double     CORRECTION_FACTOR_STRAFE       = (50.0/38.0);
     static final double     COUNTS_PER_INCH_STRAFE         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION * CORRECTION_FACTOR_STRAFE) /
-            (WHEEL_DIAMETER_INCHES * 3.1415) * (315.0/415.0);
+            (WHEEL_DIAMETER_INCHES * 3.1415) * (315.0/435.0);
     private boolean isTestBot = true;
 
     /* Declare OpMode members. */
@@ -165,7 +165,7 @@ public class MONKEY_Autonomous extends LinearOpMode {
     private final int SCANNING_DISTANCE = 16;
     private int ParkDistance;
     private SubSystemIntake intake;
-    private double ADJUST_AFTER_SCAN = 10;
+    private double ADJUST_AFTER_SCAN = 7;
     private double KNOCK_DISTANCE = 10;
     private SubSystemDrivetrain drivetrain;
     private SubSystemHopperLift hopperLift;
@@ -174,6 +174,9 @@ public class MONKEY_Autonomous extends LinearOpMode {
     private int backRightTarget;
     private int frontLeftTarget;
     private int frontRightTarget;
+    private int delayBetweenParkAndSpike = 0;
+    private boolean holdingGamepadY;
+    private boolean holdingGamepadA;
 
     public void initializeHardware() throws InterruptedException {
         // Initialize the drive system variables.
@@ -248,14 +251,18 @@ public class MONKEY_Autonomous extends LinearOpMode {
         //telemetry.addData("Distance Sensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
         //telemetry.addData("propStartingPos: ", propStartingPos);
 
-        telemetry.addData("Alliance Color: (change via x/b", SubSystemVariables.allianceColor);
-        telemetry.addData("Alliance Side: (change via DpadUp/DpadDown)", SubSystemVariables.allianceSide);
+        telemetry.addData("Alliance Color: ", SubSystemVariables.allianceColor);
+        telemetry.addData("Alliance Side: ", SubSystemVariables.allianceSide);
         //telemetry.addData("Gyro Val: ", imu.getRobotYawPitchRollAngles());
-        telemetry.addData("Parking Position (1 is corner) (change via triggers): ", SubSystemVariables.parkingPos);
-        telemetry.addData("Park? (change via bumper) ", SubSystemVariables.parkInBackstage);
+        telemetry.addData("Parking Position: ", SubSystemVariables.parkingPos);
+        telemetry.addData("Park: ", SubSystemVariables.parkInBackstage);
+        telemetry.addData("Delay: ", delayBetweenParkAndSpike + "s");
+
+        telemetry.addLine("\n\n\nlisten to Bubbly by Young Thug, Drake, Travis Scott");
         //telemetry.addData("leftDistSensor: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
         //telemetry.addData("rightDistSensor: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
-        telemetry.addData("Prop position: ", detectPropDistance());
+        //telemetry.addData("Prop position: ", detectPropDistance());
+        //telemetry.addData("back distance sensor: ", drivetrain.getFrontDistanceSensor());
         telemetry.update();
     }
 
@@ -266,16 +273,18 @@ public class MONKEY_Autonomous extends LinearOpMode {
             SubSystemVariables.allianceColor = SubSystemVariables.ALLIANCE_COLOR.RED;
         }
 
-        if(gamepad2.dpad_down) {
-            SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.BOTTOM;
+        if(gamepad2.dpad_left) {
+            SubSystemVariables.parkingPos = 1;
         } else if (gamepad2.dpad_up) {
-            SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.TOP;
+            SubSystemVariables.parkingPos = 2;
+        } else if (gamepad2.dpad_right) {
+            SubSystemVariables.parkingPos = 3;
         }
 
         if(gamepad2.left_trigger > 0.5) {
-            SubSystemVariables.parkingPos = 1;
+            SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.BOTTOM;
         } else if (gamepad2.right_trigger > 0.5) {
-            SubSystemVariables.parkingPos = 2;
+            SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.TOP;
         }
 
         if(gamepad2.left_bumper) {
@@ -283,6 +292,21 @@ public class MONKEY_Autonomous extends LinearOpMode {
         } else if (gamepad2.right_bumper) {
             SubSystemVariables.parkInBackstage = true;
         }
+
+        if(gamepad2.y && !holdingGamepadY) {
+            delayBetweenParkAndSpike += 1;
+            holdingGamepadY = true;
+        } else if (!gamepad2.y) {
+            holdingGamepadY = false;
+        }
+
+        if(gamepad2.a && !holdingGamepadA) {
+            delayBetweenParkAndSpike -= 1;
+            holdingGamepadA = true;
+        } else if (!gamepad2.a) {
+            holdingGamepadA = false;
+        }
+
     }
 
     private void finalizeVariables() {
@@ -341,54 +365,68 @@ public class MONKEY_Autonomous extends LinearOpMode {
             AutonMoveToBackstage();
         }
 
-        sleep(30000);
 
     }
 
-    private void AutonMoveToBackstage() {
-        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP)
-            dropPixelTop();
-        else
-            ParkBottom();
-    }
+
 
     private void ParkBottom() {
 
     }
 
-    private void dropPixelTop() {
+    private void AutonMoveToBackstage() {
+        sleep(delayBetweenParkAndSpike * 1000);
         hopperLift.setHopperLiftPower(1);
+        if(propPosition != 2) {
+            if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP)) || ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM)) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM))) {
+                driveStraight(DRIVE_SPEED, -10);
+                turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
+                holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
+            } else if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM)) || ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP)) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP))) {
+                driveStraight(DRIVE_SPEED, 10);
+                turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
+                holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
+            } else {
+                turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
+                holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
 
-        if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3)) {
-            driveStraight(DRIVE_SPEED, -10);
-        } else if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 3) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 1)) {
-            driveStraight(DRIVE_SPEED, 10);
-            turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
-            holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
+
+            }
         } else {
             turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
-
-
         }
 
-        hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1 - 1200);
-        hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_UP);
+        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
+            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1 - 1200);
+            //hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_UP);
+        } else {
+            driveStraight(DRIVE_SPEED, -ParkDistance);
+            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1 - 1200);
+        }
 
-        while (drivetrain.getFrontDistanceSensor() > 200 && opModeIsActive()) {
+        while (drivetrain.getFrontDistanceSensor() > 400 && opModeIsActive()) {
             drivetrain.driveHeading(-DRIVE_SPEED, TURN_SPEED, -SubSystemVariables.headingToBackboard);
         }
         while (drivetrain.getFrontDistanceSensor() > 70 && opModeIsActive()) {
-            drivetrain.driveHeading(-DRIVE_SPEED / 2, TURN_SPEED, -SubSystemVariables.headingToBackboard);
+            drivetrain.driveHeading(-DRIVE_SPEED / 2.0, TURN_SPEED, -SubSystemVariables.headingToBackboard);
         }
 
         drivetrain.driveHeading(0, 0, -SubSystemVariables.headingToBackboard);
         hopper.openGate(true);
         sleep(2000);
-        driveStraight(DRIVE_SPEED, 10);
+        driveStraight(DRIVE_SPEED, 5);
         hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_DOWN);
         hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_DOWN);
         hopper.openGate(false);
+
+        if(SubSystemVariables.parkingPos == 1) {
+            Strafe(STRAFE_SPEED, 24);
+        }
+
+        if(SubSystemVariables.parkingPos == 3) {
+            Strafe(STRAFE_SPEED, -24);
+        }
     }
 
     private void AutonDistanceDropPixel() {
@@ -413,9 +451,9 @@ public class MONKEY_Autonomous extends LinearOpMode {
     private void processPropPosition(int position) {
         if(position == 1) {
             if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-                Strafe(STRAFE_SPEED, -5);
+                Strafe(STRAFE_SPEED, -10);
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
-                driveStraight(-DRIVE_SPEED, ADJUST_AFTER_SCAN/2);
+                driveStraight(-DRIVE_SPEED, ADJUST_AFTER_SCAN/2.0);
             } else {
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
                 rotateBy(TURN_SPEED, 90);
@@ -425,7 +463,8 @@ public class MONKEY_Autonomous extends LinearOpMode {
             dropPixel();
 
         } else if (position == 2) {
-            driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
+
+            driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN+3);
 
             driveStraight(DRIVE_SPEED +0.3, KNOCK_DISTANCE);
             driveStraight(DRIVE_SPEED, -KNOCK_DISTANCE + 1);
@@ -434,9 +473,10 @@ public class MONKEY_Autonomous extends LinearOpMode {
         } else /*if (position == 3) */ {
 
             if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-                Strafe(STRAFE_SPEED, 5);
+                Strafe(STRAFE_SPEED, 10);
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
-                driveStraight(-DRIVE_SPEED, ADJUST_AFTER_SCAN/2);
+                sleep(500);
+                driveStraight(DRIVE_SPEED, -(ADJUST_AFTER_SCAN/2.0));
             } else {
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
                 rotateBy(TURN_SPEED, -90);
@@ -554,14 +594,16 @@ public class MONKEY_Autonomous extends LinearOpMode {
 
             // Determine new target position, and pass to motor controller
             int moveCounts = (int)(distance * COUNTS_PER_INCH);
-            leftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
-            rightTarget = frontRightDrive.getCurrentPosition() + moveCounts;
+            frontLeftTarget = frontLeftDrive.getCurrentPosition() + moveCounts;
+            frontRightTarget = frontRightDrive.getCurrentPosition() + moveCounts;
+            backLeftTarget = backLeftDrive.getCurrentPosition() + moveCounts;
+            backRightTarget = backRightDrive.getCurrentPosition() + moveCounts;
 
             // Set Target FIRST, then turn on RUN_TO_POSITION
-            frontLeftDrive.setTargetPosition(leftTarget);
-            backLeftDrive.setTargetPosition(leftTarget);
-            frontRightDrive.setTargetPosition(rightTarget);
-            backRightDrive.setTargetPosition(rightTarget);
+            frontLeftDrive.setTargetPosition(frontLeftTarget);
+            backLeftDrive.setTargetPosition(backLeftTarget);
+            frontRightDrive.setTargetPosition(frontRightTarget);
+            backRightDrive.setTargetPosition(backRightTarget);
 
             frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -574,8 +616,8 @@ public class MONKEY_Autonomous extends LinearOpMode {
             moveRobot(maxDriveSpeed, 0);
 
             // keep looping while we are still active, and BOTH motors are running.
-            while (opModeIsActive() &&
-                    (frontLeftDrive.isBusy() && frontRightDrive.isBusy())) {
+            while (/*opModeIsActive() &&
+                (frontLeftDrive.isBusy() &&*/ frontRightDrive.isBusy()) {
 
                 // Determine required steering to keep on heading
                 turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
@@ -587,8 +629,7 @@ public class MONKEY_Autonomous extends LinearOpMode {
                 // Apply the turning correction to the current driving speed.
                 moveRobot(driveSpeed, turnSpeed);
 
-                // Display drive status for the driver.
-                sendTelemetry(true);
+
             }
 
             // Stop all motion & Turn off RUN_TO_POSITION
