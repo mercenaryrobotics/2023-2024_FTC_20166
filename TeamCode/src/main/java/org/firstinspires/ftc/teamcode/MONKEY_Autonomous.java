@@ -261,9 +261,9 @@ public class MONKEY_Autonomous extends LinearOpMode {
         telemetry.addData("Delay: ", delayBetweenParkAndSpike + "s");
         telemetry.addData("left distance: ", leftDistanceSensor.getDistance(DistanceUnit.MM));
         telemetry.addData("right distance: ", rightDistanceSensor.getDistance(DistanceUnit.MM));
+        telemetry.addData("back distance sensor: ", drivetrain.getFrontDistanceSensor());
         telemetry.addLine("\n\n\n\n\n\n\n\nlisten to Bubbly by Young Thug, Drake, Travis Scott");
         //telemetry.addData("Prop position: ", detectPropDistance());
-        //telemetry.addData("back distance sensor: ", drivetrain.getFrontDistanceSensor());
         telemetry.update();
     }
 
@@ -312,11 +312,11 @@ public class MONKEY_Autonomous extends LinearOpMode {
 
     private void finalizeVariables() {
         if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
-            SubSystemVariables.headingToBackboard = 88;
+            SubSystemVariables.headingToBackboard = 90;
         }
 
         if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED) {
-            SubSystemVariables.headingToBackboard = -88;
+            SubSystemVariables.headingToBackboard = -90;
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
@@ -364,7 +364,7 @@ public class MONKEY_Autonomous extends LinearOpMode {
         if(SubSystemVariables.parkInBackstage) {
             AutonMoveToBackstage();
         }
-
+        sleep(20000);
 
     }
 
@@ -377,12 +377,18 @@ public class MONKEY_Autonomous extends LinearOpMode {
         if(propPosition != 2) {
             if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP)) || ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM)) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM))) {
                 driveStraight(DRIVE_SPEED, -10);
+                if(!(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1) && !(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3)) {
+                    turnToHeading(TURN_SPEED, -180);
+                    holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.25);
+                }
                 turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
-                holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
             } else if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM)) || ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP)) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP))) {
                 driveStraight(DRIVE_SPEED, 10);
+                if(!(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1) && !(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3)) {
+                    turnToHeading(TURN_SPEED, -180);
+                    holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.25);
+                }
                 turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
-                holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
             } else {
                 turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
                 holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
@@ -392,6 +398,14 @@ public class MONKEY_Autonomous extends LinearOpMode {
         } else {
             turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
+        }
+
+        if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+            Strafe(STRAFE_SPEED, -4);
+        } else {
+            if(propPosition == 3) {
+                //Strafe(STRAFE_SPEED, -3);
+            }
         }
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
@@ -414,15 +428,16 @@ public class MONKEY_Autonomous extends LinearOpMode {
         sleep(2000);
         driveStraight(DRIVE_SPEED, 5);
         hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_DOWN);
+        sleep(1000);
         hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_DOWN);
         hopper.openGate(false);
 
         if(SubSystemVariables.parkingPos == 1) {
-            Strafe(STRAFE_SPEED, 20);
+            Strafe(STRAFE_SPEED, 24);
         }
 
         if(SubSystemVariables.parkingPos == 3) {
-            Strafe(STRAFE_SPEED, -20);
+            Strafe(STRAFE_SPEED, -24);
         }
     }
 
@@ -482,10 +497,9 @@ public class MONKEY_Autonomous extends LinearOpMode {
         } else /*if (position == 3) */ {
 
             if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-                Strafe(STRAFE_SPEED, 10);
+                Strafe(STRAFE_SPEED, -10);
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
-                sleep(500);
-                driveStraight(DRIVE_SPEED, -(ADJUST_AFTER_SCAN/2.0));
+                driveStraight(-DRIVE_SPEED, ADJUST_AFTER_SCAN/2.0);
             } else if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
                 driveStraight(DRIVE_SPEED, 2);
                 turnToHeading(TURN_SPEED, -35);
@@ -496,7 +510,7 @@ public class MONKEY_Autonomous extends LinearOpMode {
                 holdHeading(TURN_SPEED, 0, 0.5);
 
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
-                rotateBy(TURN_SPEED, 90);
+                rotateBy(TURN_SPEED, -90);
                 driveStraight(DRIVE_SPEED, 2);
             } else {
                 driveStraight(DRIVE_SPEED, ADJUST_AFTER_SCAN);
