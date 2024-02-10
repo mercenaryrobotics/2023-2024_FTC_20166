@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -94,7 +95,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
  */
 
 @Autonomous
-//@Disabled
+@Disabled
 public class CenterstageAutonomousMain extends LinearOpMode {
     private boolean isTestBot = true;
     private SubSystemClawArm clawArm = null;

@@ -35,6 +35,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -100,7 +101,7 @@ import org.firstinspires.ftc.teamcode.subsystems.SubSystemDrivetrain;
 
 @Autonomous
 @Config
-//@Disabled
+@Disabled
 public class DEVELOPMENT_CenterstageAutonomousMain extends LinearOpMode {
     private static final double PIXEL_DROP_ALIGN_DISTANCE = 2.5;
     private static final double PIXEL_DROP_ADJUST_DISTANCE = 4;

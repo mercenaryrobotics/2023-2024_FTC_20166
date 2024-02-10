@@ -282,9 +282,9 @@ public class MONKEY_Autonomous extends LinearOpMode {
             SubSystemVariables.parkingPos = 3;
         }
 
-        if(gamepad2.left_trigger > 0.5) {
+        if(gamepad2.a) {
             SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.BOTTOM;
-        } else if (gamepad2.right_trigger > 0.5) {
+        } else if (gamepad2.y) {
             SubSystemVariables.allianceSide = SubSystemVariables.ALLIANCE_SIDE.TOP;
         }
 
@@ -294,17 +294,17 @@ public class MONKEY_Autonomous extends LinearOpMode {
             SubSystemVariables.parkInBackstage = true;
         }
 
-        if(gamepad2.y && !holdingGamepadY) {
+        if(gamepad2.left_trigger > 0.5 && !holdingGamepadY) {
             delayBetweenParkAndSpike += 1;
             holdingGamepadY = true;
-        } else if (!gamepad2.y) {
+        } else if (!(gamepad2.left_trigger > 0.5)) {
             holdingGamepadY = false;
         }
 
-        if(gamepad2.a && !holdingGamepadA) {
+        if(gamepad2.right_trigger > 0.5 && !holdingGamepadA) {
             delayBetweenParkAndSpike -= 1;
             holdingGamepadA = true;
-        } else if (!gamepad2.a) {
+        } else if (!(gamepad2.right_trigger > 0.5)) {
             holdingGamepadA = false;
         }
 
@@ -399,21 +399,37 @@ public class MONKEY_Autonomous extends LinearOpMode {
             turnToHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard);
             holdHeading(TURN_SPEED, -SubSystemVariables.headingToBackboard, 0.5);
         }
+        if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM) {
+            if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+                Strafe(STRAFE_SPEED, -26);
+            } else {
+                Strafe(STRAFE_SPEED, 26);
+            }
+        }
 
+        /*
         if(SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
             Strafe(STRAFE_SPEED, -4);
         } else {
             if(propPosition == 3) {
-                //Strafe(STRAFE_SPEED, -3);
+                Strafe(STRAFE_SPEED, -3);
             }
         }
+         */
 
         if(SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) {
-            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1 - 1200);
+            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1);
             hopper.setHopperPosition(SubSystemVariables.HOPPER_POS_UP);
         } else {
             driveStraight(DRIVE_SPEED, -ParkDistance);
-            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1 - 1200);
+            sleep(1000);
+            if (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE) {
+                Strafe(STRAFE_SPEED, 26);
+            } else {
+                Strafe(STRAFE_SPEED, -26);
+            }
+            sleep(1000);
+            hopperLift.setHopperLiftPosition(SubSystemVariables.HOPPER_LIFT_POS_1);
         }
 
         while (drivetrain.getFrontDistanceSensor() > 400 && opModeIsActive()) {
@@ -424,6 +440,16 @@ public class MONKEY_Autonomous extends LinearOpMode {
         }
 
         drivetrain.driveHeading(0, 0, -SubSystemVariables.headingToBackboard);
+        /*
+        if(propPosition == 1) {
+            Strafe(STRAFE_SPEED, 6);
+        }
+
+        if(propPosition == 3) {
+            Strafe(STRAFE_SPEED, -6);
+        }
+         */
+
         hopper.openGate(true);
         sleep(2000);
         driveStraight(DRIVE_SPEED, 5);

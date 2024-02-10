@@ -201,6 +201,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
                 intakeLiftPosition = 2;
             }
         } else {
+            /*
             if(gamepad2.dpad_up) {
                 hopperLiftUp = true;
             } else {
@@ -211,6 +212,20 @@ public class CenterstageMainTeleOp extends LinearOpMode {
                 hopperLiftDown = true;
             } else {
                 hopperLiftDown = false;
+            }
+             */
+
+            if(gamepad2.dpad_down) {
+                deltaMultiplier = 1;
+            }
+            if(gamepad2.dpad_left) {
+                deltaMultiplier = 2;
+            }
+            if(gamepad2.dpad_right) {
+                deltaMultiplier = 3;
+            }
+            if(gamepad2.dpad_up) {
+                deltaMultiplier = 4;
             }
         }
 
@@ -386,10 +401,10 @@ public class CenterstageMainTeleOp extends LinearOpMode {
         if (doAutoDropPixel) {
             double backdropDistance = drivetrain.getFrontDistanceSensor();
             if (backdropDistance > 200)//ToDo : Make this drive proportional to the distance away?
-                drivetrain.driveHeading(-DRIVE_SPEED, TURN_SPEED, targetHeading);
+                drivetrain.driveHeading(-DRIVE_SPEED / 2.0, TURN_SPEED, targetHeading);
             else {
-                if(backdropDistance > 70) {
-                    drivetrain.driveHeading(-DRIVE_SPEED / 2.0, TURN_SPEED, targetHeading);
+                if(backdropDistance > 80) {
+                    drivetrain.driveHeading(-DRIVE_SPEED + 0.3 /* -0.1 */, TURN_SPEED, targetHeading);
                 } else {
                     drivetrain.driveHeading(0, 0, targetHeading);
                     backdropAssistState = BACKDROP_ASSIST_STATE.ASSIST_DROP;
