@@ -357,6 +357,7 @@ public class MONKEY_Autonomous extends LinearOpMode {
             updateTelemetry();
             updateButtonPressed();
         }
+        sleep(delayBetweenParkAndSpike * 1000);
 
         AutonDistanceDropPixel();
         finalizeVariables();
@@ -372,7 +373,6 @@ public class MONKEY_Autonomous extends LinearOpMode {
 
 
     private void AutonMoveToBackstage() {
-        sleep(delayBetweenParkAndSpike * 1000);
         hopperLift.setHopperLiftPower(1);
         if(propPosition != 2) {
             if ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.TOP)) || ((SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.RED && propPosition == 3 && (SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM)) || (SubSystemVariables.allianceColor == SubSystemVariables.ALLIANCE_COLOR.BLUE && propPosition == 1 && SubSystemVariables.allianceSide == SubSystemVariables.ALLIANCE_SIDE.BOTTOM))) {
@@ -586,8 +586,8 @@ public class MONKEY_Autonomous extends LinearOpMode {
         // Set Target FIRST, then turn on RUN_TO_POSITION
         frontLeftDrive.setTargetPosition(frontLeftTarget);
         backLeftDrive.setTargetPosition(backLeftTarget);
-        frontRightDrive.setTargetPosition(backRightTarget);
-        backRightDrive.setTargetPosition(frontRightTarget);
+        frontRightDrive.setTargetPosition(frontRightTarget); //swapped these
+        backRightDrive.setTargetPosition(backRightTarget);
 
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
