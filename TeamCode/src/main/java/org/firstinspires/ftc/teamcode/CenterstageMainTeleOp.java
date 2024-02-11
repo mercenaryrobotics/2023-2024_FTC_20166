@@ -403,7 +403,7 @@ public class CenterstageMainTeleOp extends LinearOpMode {
             if (backdropDistance > 200)//ToDo : Make this drive proportional to the distance away?
                 drivetrain.driveHeading(-DRIVE_SPEED / 2.0, TURN_SPEED, targetHeading);
             else {
-                if(backdropDistance > 80) {
+                if(backdropDistance > 65) {
                     drivetrain.driveHeading(-DRIVE_SPEED + 0.3 /* -0.1 */, TURN_SPEED, targetHeading);
                 } else {
                     drivetrain.driveHeading(0, 0, targetHeading);

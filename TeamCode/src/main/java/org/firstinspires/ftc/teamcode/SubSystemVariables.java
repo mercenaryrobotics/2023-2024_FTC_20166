@@ -42,7 +42,7 @@ public class SubSystemVariables {
     public static double HOPPER_GATE_OPEN = 0.8;
     public static double HOPPER_GATE_CLOSE = 1;
 
-    public static double HOPPER_LIFT_POWER = 0.6;
+    public static double HOPPER_LIFT_POWER = 1;
     public static int HOPPER_LIFT_POS_DOWN = 0;
     public static int HOPPER_LIFT_POS_1 = -1000;
     public static int HOPPER_LIFT_POS_DELTA = -600;
